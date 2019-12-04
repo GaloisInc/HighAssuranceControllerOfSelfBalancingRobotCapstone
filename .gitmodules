@@ -1,0 +1,6 @@
+[submodule "otis-arduino"]
+	path = otis-arduino
+	url = git@github.com:GaloisInc/otis-arduino.git
+[submodule "japery"]
+	path = japery
+	url = https://github.com/pgmerek/japery.git
