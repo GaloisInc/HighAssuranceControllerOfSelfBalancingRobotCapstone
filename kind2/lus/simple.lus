@@ -1,0 +1,40 @@
+(*
+  A = 
+              x1         x2
+   x1          1   0.000999
+   x2  -0.005754     0.9981
+ 
+  B = 
+              u1
+   x1  0
+   x2   0.000999
+ 
+  C = 
+       x1  x2
+   y1   1   0
+
+K =
+    0.0862    0.0444
+
+    X(k+1) = A*X + B*U
+    Y(k+1) = C*X
+    x1(k+1) = x1(k) + 0.000999*x2(k) + 0.000999*u(k)
+    x2(k+1) = -0.005754*x1(k) + 0.9981*x2(k)
+    y = x1(k)
+*)
+node Plant(u:real;) returns(y:real;)
+var
+x1:real;
+x2:real;
+SS: bool;
+cnt: int;
+let
+  cnt = (0 -> pre cnt + 1);
+  assert(u < 1.0);
+  assert(u > -1.0);
+  x1 = (0.0 -> pre x1) + 0.000999*(0.0 -> pre x2) + 0.000999*u;
+  x2 = -0.005754*(0.0 -> pre x1) + 0.9981*(0.0 -> pre x2);
+  y = x1;
+  SS = (y<0.1 and cnt < 10) or (cnt >= 10);
+--%PROPERTY SS;
+tel;
