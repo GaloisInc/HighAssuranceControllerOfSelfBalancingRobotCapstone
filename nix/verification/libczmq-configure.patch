@@ -1,0 +1,13 @@
+diff --git a/ocamlczmq/libzmq/configure.ac b/ocamlczmq/libzmq/configure.ac
+index ce3eae7b..6bb99ec9 100644
+--- a/ocamlczmq/libzmq/configure.ac
++++ b/ocamlczmq/libzmq/configure.ac
+@@ -128,7 +128,7 @@ fi
+ 
+ 
+ # By default compiling with -Werror except OSX.
+-libzmq_werror="yes"
++libzmq_werror="no"
+ 
+ # By default use DSO visibility
+ libzmq_dso_visibility="yes"
