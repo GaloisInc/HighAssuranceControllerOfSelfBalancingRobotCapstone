@@ -1,0 +1,92 @@
+(*
+
+TWIP Linearized System (OTIS values)
+Linearized about [0,0,0,0,0] (hyperbolic point)
+  a = 
+               x1          x2          x3          x4          x5
+   x1           1        0.01           0           0           0
+   x2     0.08197           1           0           0           0
+   x3   -0.001618  -8.089e-06           1           0           0
+   x4           0           0           0           1        0.01
+   x5           0           0           0           0           1
+
+   
+  b = 
+               u1
+   x1  -0.0001095
+   x2     -0.0219
+   x3     0.02675
+   x4           0
+   x5           0 
+*)
+
+node TWIP(s:real;) returns(y:real;)
+var
+x1: real; -- tilt
+x2: real; -- tilt angular rate
+x3: real; -- forward/backward velocity
+x4: real; -- yaw
+x5: real; -- yaw angular rate
+e: real; -- error signal
+u: real; -- control signal
+cnt: int; -- iteration count
+NT: bool; -- stability condition
+let
+    -- max initial tilt assertion
+    assert(s < 3.14/6.0);
+    assert(s > -3.14/6.0);
+
+    -- state space evolution
+    cnt = (0 -> pre cnt + 1);
+    x1 = (s -> pre x1) + 0.01*(0.0 -> pre x2) - 0.0001095*(0.0 -> pre u);
+    x2 = 0.08197*(s -> pre x1) + (0.0 -> pre x2) - 0.0219*(0.0 -> pre u);
+    x3 = -0.001618*(s -> pre x1) - 0.000008089*(0.0 -> pre x2) + (0.0 -> pre x3) + 0.02675*(0.0 -> pre u);
+    x4 = (0.0 -> pre x4) + 0.01*(0.0 -> pre x5);
+    x5 = (0.0 -> pre x5);
+
+    -- error signal to control signal
+    e = -x1;
+    u = PIDControl(e);
+
+    -- output selection
+    y = x1;
+
+    -- stability condition
+    NT = (y < 0.1 and cnt > 70 and cnt < 100) or (cnt >= 100);
+--%PROPERTY NT;
+tel
+
+node PIDControl(X : real) returns (Y : real);
+const Kp: real = 51.0;
+const Ki: real = 140.0;
+const Kd: real = 3.2;
+const Dt: real = 0.01;
+const max_val: real = 1000.0;
+let
+    Y = MinMax(Kp * X + Ki * Dt * Accumulate(X) + Kd/Dt * BackDifference(X), max_val);
+tel
+
+node BackDifference(X : real) returns (Y : real);
+let
+    Y = X - (0.0 -> pre X);
+tel
+
+node Accumulate(X : real) returns (Y : real);
+let
+    Y = X -> X + (pre Y);
+tel
+
+node Min(X, Y : real) returns (Z : real);
+let
+    Z = if (X < Y) then X else Y;
+tel
+
+node Max(X, Y : real) returns (Z : real);
+let
+    Z = if (X > Y) then X else Y;
+tel
+
+node MinMax(X, Y : real) returns (Z : real);
+let
+    Z = Max(Min(X, Y), -Y);
+tel
