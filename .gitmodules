@@ -4,3 +4,6 @@
 [submodule "japery"]
 	path = japery
 	url = https://github.com/pgmerek/japery.git
+[submodule "ECE-HACoSR2"]
+	path = ECE-HACoSR2
+	url = https://github.com/Artem1199/ECE-HACoSR2
