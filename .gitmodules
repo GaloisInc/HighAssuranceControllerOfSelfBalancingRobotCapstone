@@ -7,3 +7,9 @@
 [submodule "ECE-HACoSR2"]
 	path = ECE-HACoSR2
 	url = https://github.com/Artem1199/ECE-HACoSR2
+[submodule "otis-tcp"]
+	path = otis-tcp
+	url = https://github.com/Artem1199/otis-tcp
+[submodule "otis-server"]
+	path = otis-server
+	url = https://github.com/Artem1199/otis-server
