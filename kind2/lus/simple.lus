@@ -22,6 +22,8 @@ K =
     x2(k+1) = -0.005754*x1(k) + 0.9981*x2(k)
     y = x1(k)
 *)
+
+
 node Plant(u:real;) returns(y:real;)
 var
 x1:real;

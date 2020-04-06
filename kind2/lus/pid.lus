@@ -24,7 +24,7 @@ K =
 *)
 
 
-node compute_pid(Input:real; Now:real; Setpoint:real; Kp:real; Ki:real; Kd:real; sampleTime:real;) returns(y:real;);
+node compute_pid(Input:real; Now:real; Setpoint:real; Kp:real; Ki:real; Kd:real; SampleTime:real;) returns(y:real;);
 
 (*var
 x1:real;
@@ -32,19 +32,36 @@ x2:real;
 SS: bool;
 cnt: int;*)
 
-let
-    if (Now - pre Now >= sampleTime)
-    then y = 1.0
-    else y = 0.0;
+(*var
+dInput:real;
+error:real;*)
 
-  cnt = (0 -> pre cnt + 1);
+
+let
+   y =  if (Now - (0.0 -> pre Now) >= SampleTime) then
+   
+   (*dInput = Input - 0.0 -> pre Input;*)
+  (*error = Setpoint - Input;*)
+   
+   
+   Kp * (Setpoint - Input) + Ki * (Setpoint - Input) * SampleTime/1000.0 - Kd * (Input - (0.0 -> pre Input)) * 1000.0/SampleTime
+   
+   
+   
+   else
+   
+   0.0 -> pre y;
+
+  (*&cnt = (0 -> pre cnt + 1);
   assert(u < 1.0);
   assert(u > -1.0);
   x1 = (0.0 -> pre x1) + 0.000999*(0.0 -> pre x2) + 0.000999*u;
   x2 = -0.005754*(0.0 -> pre x1) + 0.9981*(0.0 -> pre x2);
-  y = x1;
+  y = x1;*)
   
   
-  SS = (y<0.1 and cnt < 10) or (cnt >= 10);
---%PROPERTY SS;
+ (* SS = (y<0.1 and cnt < 10) or (cnt >= 10);
+--%PROPERTY SS;*)
+
 tel;
+

@@ -1,0 +1,18 @@
+[submodule "otis-arduino"]
+	path = otis-arduino
+	url = git@github.com:GaloisInc/otis-arduino.git
+[submodule "japery"]
+	path = japery
+	url = https://github.com/pgmerek/japery.git
+[submodule "ECE-HACoSR2"]
+	path = ECE-HACoSR2
+	url = https://github.com/Artem1199/ECE-HACoSR2
+[submodule "otis-AK/otis-tcp"]
+	path = otis-AK/otis-tcp
+	url = https://github.com/Artem1199/otis-tcp
+[submodule "otis-AK/otis-server"]
+	path = otis-AK/otis-server
+	url = https://github.com/Artem1199/otis-server
+[submodule "otis-AK/otis-arduino"]
+	path = otis-AK/otis-arduino
+	url = https://github.com/Artem1199/otis-arduino
