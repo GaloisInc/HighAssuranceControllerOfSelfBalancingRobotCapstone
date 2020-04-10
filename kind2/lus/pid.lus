@@ -1,67 +1,56 @@
-(*
-  A = 
-              x1         x2
-   x1          1   0.000999
-   x2  -0.005754     0.9981
- 
-  B = 
-              u1
-   x1  0
-   x2   0.000999
- 
-  C = 
-       x1  x2
-   y1   1   0
-
-K =
-    0.0862    0.0444
-
-    X(k+1) = A*X + B*U
-    Y(k+1) = C*X
-    x1(k+1) = x1(k) + 0.000999*x2(k) + 0.000999*u(k)
-    x2(k+1) = -0.005754*x1(k) + 0.9981*x2(k)
-    y = x1(k)
-*)
+(* Artem K*)
 
 
-node compute_pid(Input:real; Now:real; Setpoint:real; Kp:real; Ki:real; Kd:real; SampleTime:real;) returns(y:real;);
-
-(*var
-x1:real;
-x2:real;
-SS: bool;
-cnt: int;*)
-
-(*var
-dInput:real;
-error:real;*)
-
+(*Compute function, checks if SampleTime limit reached and calls PID calculate *)
+node Compute(Input:real; Now:real; Setpoint:real; Kp:real; Ki:real; Kd:real; SampleTime:real;) returns(Output:real;);
 
 let
-   y =  if (Now - (0.0 -> pre Now) >= SampleTime) then
-   
-   (*dInput = Input - 0.0 -> pre Input;*)
-  (*error = Setpoint - Input;*)
-   
-   
-   Kp * (Setpoint - Input) + Ki * (Setpoint - Input) * SampleTime/1000.0 - Kd * (Input - (0.0 -> pre Input)) * 1000.0/SampleTime
-   
-   
-   
-   else
-   
-   0.0 -> pre y;
 
-  (*&cnt = (0 -> pre cnt + 1);
-  assert(u < 1.0);
-  assert(u > -1.0);
-  x1 = (0.0 -> pre x1) + 0.000999*(0.0 -> pre x2) + 0.000999*u;
-  x2 = -0.005754*(0.0 -> pre x1) + 0.9981*(0.0 -> pre x2);
-  y = x1;*)
-  
-  
- (* SS = (y<0.1 and cnt < 10) or (cnt >= 10);
---%PROPERTY SS;*)
+            Output =  if (Now - (0.0 -> pre Now) >= SampleTime) then
+   
+                    
+                    Compute_calc(Input, Now, Setpoint, Kp, Ki, Kd, SampleTime)
+   
+            else
+   
+                    0.0 -> pre Output;
 
 tel;
 
+
+(*PID calculation function that does the actually math*)
+
+node Compute_calc(Input:real; Now:real; Setpoint:real; Kp:real; Ki:real; Kd:real; SampleTime:real;) returns(Output:real;);
+
+var
+    dInput:real;
+    error:real;
+    outputSum:real;
+    
+    let 
+        dInput = Input - (0.0 -> pre Input);
+        error = Setpoint - Input;
+        
+        outputSum = 0.0 -> pre outputSum + Ki * error * SampleTime/1000.0;
+    
+        outputSum = if (outputSum > 1000.0) then 1000.0 else if (outputSum < -1000.0) then 1000.0 else outputSum;
+        
+        Output = Kp * error + Ki * error * SampleTime/1000.0 - Kd * dInput * 1000.0/SampleTime;
+        
+        Output = if (Output > 1000.0) then 1000.0 else if (Output < -1000.0) then 1000.0 else Output;
+        
+        
+    tel;
+    
+    
+(* function to limit values between -1k to 1k for Arduino PWM *)
+
+function limit (x:real;) returns (y:real;);
+
+let
+
+  (* y = if (x > 1000.0) then 1000.0 else if (x < -1000.0) then -1000.0 else x;*)
+  
+  y = if (x > 1000.0) then 1000.0 else 0.0;
+
+tel;
