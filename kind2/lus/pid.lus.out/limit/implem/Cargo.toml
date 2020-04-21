@@ -1,5 +1,0 @@
-[package]
-name = "limit_implem"
-version = "1.0.0"
-authors = ["Kind 2 <cesare-tinelli@uiowa.edu>"]
-build = "rsc/build.rs"

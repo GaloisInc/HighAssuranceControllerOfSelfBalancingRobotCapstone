@@ -31,13 +31,13 @@ var
         dInput = Input - (0.0 -> pre Input);
         error = Setpoint - Input;
         
-        outputSum = 0.0 -> pre outputSum + Ki * error * SampleTime/1000.0;
+        outputSum = limit (0.0 -> pre outputSum + Ki * error * SampleTime/1000.0);
     
-        outputSum = if (outputSum > 1000.0) then 1000.0 else if (outputSum < -1000.0) then 1000.0 else outputSum;
+        (*outputSum = if (outputSum > 1000.0) then 1000.0 else if (outputSum < -1000.0) then 1000.0 else outputSum;*)
         
-        Output = Kp * error + Ki * error * SampleTime/1000.0 - Kd * dInput * 1000.0/SampleTime;
+        Output = limit (Kp * error + Ki * error * SampleTime/1000.0 - Kd * dInput * 1000.0/SampleTime );
         
-        Output = if (Output > 1000.0) then 1000.0 else if (Output < -1000.0) then 1000.0 else Output;
+        (*Output = if (Output > 1000.0) then 1000.0 else if (Output < -1000.0) then 1000.0 else Output;*)
         
         
     tel;
@@ -49,8 +49,8 @@ function limit (x:real;) returns (y:real;);
 
 let
 
-  (* y = if (x > 1000.0) then 1000.0 else if (x < -1000.0) then -1000.0 else x;*)
+   y = if (x > 1000.0) then 1000.0 else if (x < -1000.0) then -1000.0 else x;
   
-  y = if (x > 1000.0) then 1000.0 else 0.0;
+ (* y = if (x > 1000.0) then 1000.0 else 0.0;*)
 
 tel;
