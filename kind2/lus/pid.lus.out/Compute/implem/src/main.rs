@@ -14,10 +14,7 @@ use helpers::* ;
 
 /// Entry point.
 fn main() {
-  // clap_and_run()
-  let test_input:Compute.Input.0 = 1.0;
-  let test = Compute::init();
-
+  clap_and_run()
 }
 
 
@@ -56,6 +53,7 @@ fn main() {
 /// No assumptions for this system.
 ///
 pub struct Compute {
+  pub svar_ArraySize: usize,
   /// Input: `Compute.usr.Input`
   pub svar_Input: Real,
   /// Input: `Compute.usr.Now`
@@ -228,11 +226,15 @@ impl Sys for Compute {
   fn output(& self) -> Self::Output {(
     self.svar_Output,
   )}
-  fn output_str(& self) -> String {
-    format!(
-      "{}",
-      self.svar_Output
-    )
+  // fn output_str(& self) -> String {
+  //   format!(
+  //     "{}",
+  //     self.svar_Output
+  //   )
+  // }
+
+  fn output_flt(& self) -> Real {
+    self.svar_Output
   }
 }
 
@@ -260,8 +262,8 @@ impl Sys for Compute {
 ///
 /// | Lustre identifier | Struct | Inputs | Outputs | Position |
 /// |:---:|:---:|:---:|:---:|:---:|
-/// | `limit` | [Limit](struct.Limit.html) | `abs_2` | `abs_3` | [pid.lus line 38](../src/lus/pid.lus.html#38) |
-/// | `limit` | [Limit](struct.Limit.html) | `abs_0` | `abs_1` | [pid.lus line 34](../src/lus/pid.lus.html#34) |
+/// | `limit` | [Limit](struct.Limit.html) | `abs_2` | `abs_3` | [pid.lus line 35](../src/lus/pid.lus.html#35) |
+/// | `limit` | [Limit](struct.Limit.html) | `abs_0` | `abs_1` | [pid.lus line 33](../src/lus/pid.lus.html#33) |
 ///
 /// # Assertions
 ///
@@ -272,6 +274,7 @@ impl Sys for Compute {
 /// No assumptions for this system.
 ///
 pub struct Compute_calc {
+  pub svar_ArraySize: usize,
   /// Input: `Compute_calc.usr.Input`
   pub svar_Input: Real,
   /// Input: `Compute_calc.usr.Now`
@@ -305,9 +308,9 @@ pub struct Compute_calc {
   /// Local, local: `Compute_calc.impl.usr.dInput`
   pub svar_dInput: Real,
 
-  /// Call to `limit` ([pid.lus line 34](../src/lus/pid.lus.html#34)).
+  /// Call to `limit` ([pid.lus line 33](../src/lus/pid.lus.html#33)).
   pub limit_1: Limit,
-  /// Call to `limit` ([pid.lus line 38](../src/lus/pid.lus.html#38)).
+  /// Call to `limit` ([pid.lus line 35](../src/lus/pid.lus.html#35)).
   pub limit_0: Limit,
 }
 
@@ -518,6 +521,7 @@ impl Sys for Compute_calc {
 /// No assumptions for this system.
 ///
 pub struct Limit {
+  pub svar_ArraySize: usize,
   /// Input: `limit.usr.x`
   pub svar_x: Real,
 
@@ -535,7 +539,7 @@ impl Sys for Limit {
     Real, // svar_y (limit.usr.y)
   ) ;
   fn arity() -> usize { 1 }
-  fn input_of(vec: Vec<String>) -> Result<Self::Input, String> {
+  fn input_of(vec: Vec<String>) -> Self::Input {
     match vec.len() {
       n if n == Self::arity() => {
         Ok( (
@@ -552,7 +556,7 @@ impl Sys for Limit {
     }
   }
 
-  fn init(input: Self::Input) -> Result<Self, String> {
+  fn init(input: Self::Input) -> Self {
     // |===| Retrieving inputs.
     let svar_x = input.0 ;
     
@@ -565,7 +569,7 @@ impl Sys for Limit {
     
     
     // |===| Returning initial state.
-    Ok( Limit {
+     Limit {
       // |===| Inputs.
       svar_x: svar_x,
       
@@ -577,7 +581,7 @@ impl Sys for Limit {
       
       // |===| Calls.
       
-    } )
+    }
   }
 
   fn next(mut self, input: Self::Input) -> Result<Self, String> {
@@ -764,57 +768,68 @@ Default system: \"compute\".\
     /// Number of inputs expected.
     fn arity() -> usize ;
     /// Parses a vector of inputs.
-    fn input_of(Vec<String>) -> Result<Self::Input, String> ;
+    fn input_of([Real; svar_arraySize: usize]) -> Self::Input ;
     /// Initial state of the system.
-    fn init(Self::Input) -> Result<Self, String> ;
+    fn init(Self::Input) -> Self;
     /// Computes the next step.
-    fn next(self, Self::Input) -> Result<Self, String> ;
+    fn next(self, Self::Input) -> Self;
+
+    fn read_init(array: [Real; svar_arraySize: usize]) -> Self{
+      inputs = input_of(array);
+      init = Self::init(inputs)
+    }
+
+    fn read_next(array: [Real; svar_arraySize: usize]) -> Self{
+      inputs = input_of(array);
+      init = Self::next(inputs)
+    }
+    fn output_flt(& self) -> Real ;
     /// Reads inputs from standard input, computes initial state, prints output.
-    fn read_init(reader: & mut InputReader) -> Result<Self, String> {
-      match Self::input_of( try!(reader.read_inputs()) ) {
-        Ok(inputs) => {
-          let init = try!( Self::init(inputs) ) ;
-          println!("{}", init.output_str()) ;
-          Ok(init)
-        },
-        Err(s) => Err(s),
-      }
-    }
+    // fn read_init(reader: & mut InputReader) -> Self {
+    //   match Self::input_of( try!(reader.read_inputs()) ) {
+    //     Ok(inputs) => {
+    //       let init = try!( Self::init(inputs) ) ;
+    //       println!("{}", init.output_str()) ;
+    //       Ok(init)
+    //     },
+    //     Err(s) => Err(s),
+    //   }
+    // }
     /// Reads inputs from standard input, computes next step, prints output.
-    fn read_next(self, reader: & mut InputReader) -> Result<Self, String> {
-      match Self::input_of( try!(reader.read_inputs()) ) {
-        Ok(inputs) => {
-          let next = try!( self.next(inputs) ) ;
-          println!("{}", next.output_str()) ;
-          Ok(next)
-        },
-        Err(s) => Err(s),
-      }
-    }
+    // fn read_next(self, reader: & mut InputReader) -> Result<Self, String> {
+    //   match Self::input_of( try!(reader.read_inputs()) ) {
+    //     Ok(inputs) => {
+    //       let next = try!( self.next(inputs) ) ;
+    //       println!("{}", next.output_str()) ;
+    //       Ok(next)
+    //     },
+    //     Err(s) => Err(s),
+    //   }
+    // }
     /// Output of the system.
     fn output(& self) -> Self::Output ;
     /// String representation of the output.
-    fn output_str(& self) -> String ;
+   // fn output_str(& self) -> String ;
     /// Runs a never-ending, read-eval-print loop on the system.
-    fn run() -> ! {
-      let mut reader = InputReader::mk() ;
-      let mut state = match Self::read_init(& mut reader) {
-        Ok(init) => init,
-        Err(e) => {
-          println!("(Error: {})", e) ;
-          exit(2)
-        }
-      } ;
-      loop {
-        match state.read_next(& mut reader) {
-          Ok(next) => state = next,
-          Err(e) => {
-            println!("(Error: {})", e) ;
-            exit(2)
-          }
-        }
-      }
-    }
+    // fn run() -> ! {
+    //   let mut reader = InputReader::mk() ;
+    //   let mut state = match Self::read_init(& mut reader) {
+    //     Ok(init) => init,
+    //     Err(e) => {
+    //       println!("(Error: {})", e) ;
+    //       exit(2)
+    //     }
+    //   } ;
+    //   loop {
+    //     match state.read_next(& mut reader) {
+    //       Ok(next) => state = next,
+    //       Err(e) => {
+    //         println!("(Error: {})", e) ;
+    //         exit(2)
+    //       }
+    //     }
+    //   }
+    // }
   }
 }
 
