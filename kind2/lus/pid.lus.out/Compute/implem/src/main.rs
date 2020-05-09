@@ -611,54 +611,54 @@ impl Sys for Limit {
 
 /// Types and structures for systems.
 pub mod helpers {
-  use std::io::{ Stdin, stdin } ;
-  use std::process::exit ;
+  // use std::io::{ Stdin, stdin } ;
+  // use std::process::exit ;
 
   /// Prints usage.
-  pub fn help() {
-    println!("") ;
-    println!("\
-Options:
-  -h, --help
-    prints this message
-  --limit
-    inputs:  Real (x)
-    outputs: Real (y)
-  --compute_calc
-    inputs:  Real (Input)
-             Real (Now)
-             Real (Setpoint)
-             Real (Kp)
-             Real (Ki)
-             Real (Kd)
-             Real (SampleTime)
-    outputs: Real (Output)
-  --compute
-    inputs:  Real (Input)
-             Real (Now)
-             Real (Setpoint)
-             Real (Kp)
-             Real (Ki)
-             Real (Kd)
-             Real (SampleTime)
-    outputs: Real (Output)
-Usage:
-  Inputs (outputs) are read (printed) as comma-separated values on a single
-  line.
-  The read-eval-print loop runs forever, write \"exit\" or \"quit\"
-  to exit it cleanly.
-Default system: \"compute\".\
-    ") ;
-    println!("")
-  }
+//   pub fn help() {
+//     println!("") ;
+//     println!("\
+// Options:
+//   -h, --help
+//     prints this message
+//   --limit
+//     inputs:  Real (x)
+//     outputs: Real (y)
+//   --compute_calc
+//     inputs:  Real (Input)
+//              Real (Now)
+//              Real (Setpoint)
+//              Real (Kp)
+//              Real (Ki)
+//              Real (Kd)
+//              Real (SampleTime)
+//     outputs: Real (Output)
+//   --compute
+//     inputs:  Real (Input)
+//              Real (Now)
+//              Real (Setpoint)
+//              Real (Kp)
+//              Real (Ki)
+//              Real (Kd)
+//              Real (SampleTime)
+//     outputs: Real (Output)
+// Usage:
+//   Inputs (outputs) are read (printed) as comma-separated values on a single
+//   line.
+//   The read-eval-print loop runs forever, write \"exit\" or \"quit\"
+//   to exit it cleanly.
+// Default system: \"compute\".\
+//     ") ;
+//     println!("")
+//   }
 
-  /// Prints usage, an error, and exits with status `2`.
-  pub fn error<T: ::std::fmt::Display>(e: T) {
-    help() ;
-    println!("Error: {}", e) ;
-    println!("") ;
-    exit(2)
-  }
+//   /// Prints usage, an error, and exits with status `2`.
+//   pub fn error<T: ::std::fmt::Display>(e: T) {
+//     help() ;
+//     println!("Error: {}", e) ;
+//     println!("") ;
+//     exit(2)
+//   }
 
   /// Handles CLA.
   // pub fn clap_and_run() {
@@ -695,51 +695,51 @@ Default system: \"compute\".\
   pub type Bool = bool ;
 
   /// Stores an `Stdin` and a buffer to read lines.
-  pub struct InputReader {
-    /// Standard input.
-    stdin: Stdin,
-    /// String buffer.
-    buff: String,
-  }
-  impl InputReader {
-    /// Creates an input reader.
-    pub fn mk() -> Self {
-      InputReader {
-        stdin: stdin(),
-        buff: String::with_capacity(100),
-      }
-    }
-    // Reads comma separated inputs from standard input.
-    // pub fn read_inputs(& mut self) -> Result<Vec<String>, String> {
-    //   self.buff.clear() ;
-    //   match self.stdin.read_line(& mut self.buff) {
-    //     Ok(_) => (),
-    //     Err(e) => return Err(
-    //       format!("could not read line from stdin: {}", e)
-    //     ),
-    //   } ;
-    //   let chars = self.buff.trim_left().chars() ;
-    //   let mut buff = String::new() ;
-    //   let mut vec = vec![] ;
-    //   for c in chars {
-    //     match c {
-    //       ' ' | '\t' => (),
-    //       ',' | '\n' => {
-    //         vec.push(buff.clone()) ;
-    //         buff.clear()
-    //       },
-    //       _ => buff.push(c),
-    //     }
-    //   } ;
-    //   if vec.len() > 1 {
-    //     match vec[0].trim() {
-    //       "exit" | "quit" => exit(0),
-    //       _ => ()
-    //     }
-    //   } ;
-    //   Ok(vec)
-    // }
-  }
+  // pub struct InputReader {
+  //   /// Standard input.
+  //   stdin: Stdin,
+  //   /// String buffer.
+  //   buff: String,
+  // }
+  // // impl InputReader {
+  //   /// Creates an input reader.
+  //   pub fn mk() -> Self {
+  //     InputReader {
+  //       stdin: stdin(),
+  //       buff: String::with_capacity(100),
+  //     }
+  //   }
+  //   Reads comma separated inputs from standard input.
+  //   pub fn read_inputs(& mut self) -> Result<Vec<String>, String> {
+  //     self.buff.clear() ;
+  //     match self.stdin.read_line(& mut self.buff) {
+  //       Ok(_) => (),
+  //       Err(e) => return Err(
+  //         format!("could not read line from stdin: {}", e)
+  //       ),
+  //     } ;
+  //     let chars = self.buff.trim_left().chars() ;
+  //     let mut buff = String::new() ;
+  //     let mut vec = vec![] ;
+  //     for c in chars {
+  //       match c {
+  //         ' ' | '\t' => (),
+  //         ',' | '\n' => {
+  //           vec.push(buff.clone()) ;
+  //           buff.clear()
+  //         },
+  //         _ => buff.push(c),
+  //       }
+  //     } ;
+  //     if vec.len() > 1 {
+  //       match vec[0].trim() {
+  //         "exit" | "quit" => exit(0),
+  //         _ => ()
+  //       }
+  //     } ;
+  //     Ok(vec)
+  //   }
+  // }
 
   /// Trait all systems must implement.
   pub trait Sys: Sized {
@@ -816,45 +816,4 @@ Default system: \"compute\".\
     // }
   }
 }
-
-/// Parsing functions.
-pub mod parse {
-  use helpers::{ Int, Real, Bool } ;
-  use std::fmt::Display ;
-  use std::str::FromStr ;
-  /// Generic parser to factor error handling out.
-  fn generic<
-    Out, Error: Display, F: Fn(& str) -> Result<Out, Error>
-  >(s: & str, f: F, typ3: & 'static str) -> Result<Out, String> {
-    match f(s) {
-      Ok(res) => Ok(res),
-      Err(e) => Err(
-        format!("could not parse \"{}\" as {}: {}", s, typ3, e)
-      ),
-    }
-  }
-  /// Parses a [`Bool`](../type.Bool.html).
-  pub fn bool(s: & str) -> Result<Bool, String> {
-    generic(
-      s,
-      |s| match s {
-        "true" | "on" => Ok(true),
-        "false" | "off" => Ok(false),
-        _ => Err(
-          format!("legal values: true, on, false, off")
-        ),
-      },
-      "a bool"
-    )
-  }
-  /// Parses an [`Int`](../type.Int.html).
-  pub fn int(s: & str) -> Result<Int, String> {
-    generic(s, |s| Int::from_str(s), "an int")
-  }
-  /// Parses a [`Real`](../type.Real.html).
-  pub fn real(s: & str) -> Result<Real, String> {
-    generic(s, |s| Real::from_str(s), "a real")
-  }
-}
-
 
