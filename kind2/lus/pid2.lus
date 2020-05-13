@@ -1,4 +1,5 @@
-(* Artem K*)
+(* Artem K *)
+
 
 
 (*Compute function, checks if SampleTime limit reached and calls PID calculate *)
@@ -25,10 +26,11 @@ var
     dInput:real;
     error:real;
     outputSum:real;
+
     
     let 
+	error = Setpoint - Input;
         dInput = Input - (0.0 -> pre Input);
-        error = Setpoint - Input;
         
         outputSum = limit (0.0 -> pre outputSum + Ki * error * SampleTime/1000.0);
         
@@ -43,8 +45,24 @@ function limit (x:real;) returns (y:real;);
 
 let
 
-   y = if (x > 1000.0) then 1000.0 else if (x < -1000.0) then -1000.0 else x;
+   y = if (x > 230.0) then 230.0 else if (x < -230.0) then -230.0 else x;
   
- (* y = if (x > 1000.0) then 1000.0 else 0.0;*)
+ (* y = if (x > 230.0) then 230.0 else 0.0;*)
 
 tel;
+
+(*
+Input between .7680 and -.7
+
+Now: 
+
+double originalSetpoint = -0.0968;
+
+double Kpt = 800;
+double Kit = 24000;
+double Kdt = 20;
+
+SampleTime = 5;
+*)
+
+

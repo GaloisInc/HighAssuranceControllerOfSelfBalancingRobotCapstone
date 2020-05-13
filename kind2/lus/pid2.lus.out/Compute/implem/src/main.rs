@@ -10,11 +10,13 @@
   unused_variables, unused_parens
 )]
 
+#![no_std]
+
 use helpers::* ;
 
 /// Entry point.
 fn main() {
-  clap_and_run()
+  // clap_and_run()
 }
 
 
@@ -52,7 +54,8 @@ fn main() {
 ///
 /// No assumptions for this system.
 ///
-pub struct Compute {
+#[repr(C)]
+  pub struct Compute {
   /// Input: `Compute.usr.Input`
   pub svar_Input: Real,
   /// Input: `Compute.usr.Now`
@@ -91,31 +94,31 @@ impl Sys for Compute {
   type Output = (
     Real, // svar_Output (Compute.usr.Output)
   ) ;
-  fn arity() -> usize { 7 }
-  fn input_of(vec: Vec<String>) -> Result<Self::Input, String> {
-    match vec.len() {
-      n if n == Self::arity() => {
-        Ok( (
-          try!( parse::real(& vec[0]) ), 
-          try!( parse::real(& vec[1]) ), 
-          try!( parse::real(& vec[2]) ), 
-          try!( parse::real(& vec[3]) ), 
-          try!( parse::real(& vec[4]) ), 
-          try!( parse::real(& vec[5]) ), 
-          try!( parse::real(& vec[6]) ),
-        ) )
-      },
-      n => Err(
-        format!(
-          "arity mismatch, expected {} but got {}: {:?}",
-          Self::arity(), n, vec
-        )
-        
-      ),
-    }
-  }
+/*  fn arity() -> usize { 7 }
+*//*  fn input_of(vec: Vec<String>) -> Result<Self::Input, String> {
+        match vec.len() {
+          n if n == Self::arity() => {
+            (
+              try!( parse::real(& vec[0]) ), 
+              try!( parse::real(& vec[1]) ), 
+              try!( parse::real(& vec[2]) ), 
+              try!( parse::real(& vec[3]) ), 
+              try!( parse::real(& vec[4]) ), 
+              try!( parse::real(& vec[5]) ), 
+              try!( parse::real(& vec[6]) ),
+            ) 
+          },
+          n => Err(
+            format!(
+              "arity mismatch, expected {} but got {}: {:?}",
+              Self::arity(), n, vec
+            )
+            
+          ),
+        }
+      }
 
-  fn init(input: Self::Input) -> Result<Self, String> {
+*/   fn init(input: Self::Input) -> Self {
     // |===| Retrieving inputs.
     let svar_Input = input.0 ;
     let svar_Now = input.1 ;
@@ -126,7 +129,7 @@ impl Sys for Compute {
     let svar_SampleTime = input.6 ;
     
     // |===| Computing initial state.
-    let Compute_calc_0 = try!( Compute_calc::init( (
+    let Compute_calc_0 = Compute_calc::init( (
       svar_Input,
       svar_Now,
       svar_Setpoint,
@@ -134,7 +137,7 @@ impl Sys for Compute {
       svar_Ki,
       svar_Kd,
       svar_SampleTime,
-    ) ) ) ;
+    ) ) ;
     let (
       svar_abs_0,
     ) = Compute_calc_0.output() ;
@@ -147,7 +150,7 @@ impl Sys for Compute {
     
     
     // |===| Returning initial state.
-    Ok( Compute {
+    Compute {
       // |===| Inputs.
       svar_Input: svar_Input,
       svar_Now: svar_Now,
@@ -165,10 +168,10 @@ impl Sys for Compute {
       
       // |===| Calls.
       Compute_calc_0: Compute_calc_0,
-    } )
+    } 
   }
 
-  fn next(mut self, input: Self::Input) -> Result<Self, String> {
+  fn next(&mut self, input: Self::Input) {
     // |===| Retrieving inputs.
     let svar_Input = input.0 ;
     let svar_Now = input.1 ;
@@ -179,7 +182,7 @@ impl Sys for Compute {
     let svar_SampleTime = input.6 ;
     
     // |===| Computing next state.
-    let Compute_calc_0 = try!( self.Compute_calc_0.next( (
+    /*let Compute_calc_0 = */ self.Compute_calc_0.next( (
       svar_Input,
       svar_Now,
       svar_Setpoint,
@@ -187,10 +190,10 @@ impl Sys for Compute {
       svar_Ki,
       svar_Kd,
       svar_SampleTime,
-    ) ) ) ;
+    ) ) ;
     let (
       svar_abs_0,
-    ) = Compute_calc_0.output() ;
+    ) = self.Compute_calc_0.output() ;
     let svar_Output = ( if ((svar_Now - self.svar_Now) >= svar_SampleTime) { svar_abs_0 } else {self.svar_Output } ) ;
     
     // |===| Checking assertions.
@@ -216,21 +219,21 @@ impl Sys for Compute {
     self.svar_abs_0 = svar_abs_0 ;
     
     // |===| Calls.
-    self.Compute_calc_0 = Compute_calc_0 ;
+    /*self.Compute_calc_0 = Compute_calc_0 ;*/ 
     
     // |===| Return new state.
-    Ok( self )
+    /*Ok( self )*/
   }
 
   fn output(& self) -> Self::Output {(
     self.svar_Output,
   )}
-  fn output_str(& self) -> String {
-    format!(
-      "{}",
-      self.svar_Output
-    )
-  }
+/*  fn output_str(& self) -> String {
+      format!(
+        "{}",
+        self.svar_Output
+      )
+    }*/
 }
 
 /// Stores the state for sub-node `Compute_calc`.
@@ -268,7 +271,8 @@ impl Sys for Compute {
 ///
 /// No assumptions for this system.
 ///
-pub struct Compute_calc {
+#[repr(C)]
+  pub struct Compute_calc {
   /// Input: `Compute_calc.usr.Input`
   pub svar_Input: Real,
   /// Input: `Compute_calc.usr.Now`
@@ -321,31 +325,31 @@ impl Sys for Compute_calc {
   type Output = (
     Real, // svar_Output (Compute_calc.usr.Output)
   ) ;
-  fn arity() -> usize { 7 }
-  fn input_of(vec: Vec<String>) -> Result<Self::Input, String> {
-    match vec.len() {
-      n if n == Self::arity() => {
-        Ok( (
-          try!( parse::real(& vec[0]) ), 
-          try!( parse::real(& vec[1]) ), 
-          try!( parse::real(& vec[2]) ), 
-          try!( parse::real(& vec[3]) ), 
-          try!( parse::real(& vec[4]) ), 
-          try!( parse::real(& vec[5]) ), 
-          try!( parse::real(& vec[6]) ),
-        ) )
-      },
-      n => Err(
-        format!(
-          "arity mismatch, expected {} but got {}: {:?}",
-          Self::arity(), n, vec
-        )
-        
-      ),
-    }
-  }
+/*  fn arity() -> usize { 7 }
+*//*  fn input_of(vec: Vec<String>) -> Result<Self::Input, String> {
+        match vec.len() {
+          n if n == Self::arity() => {
+            (
+              try!( parse::real(& vec[0]) ), 
+              try!( parse::real(& vec[1]) ), 
+              try!( parse::real(& vec[2]) ), 
+              try!( parse::real(& vec[3]) ), 
+              try!( parse::real(& vec[4]) ), 
+              try!( parse::real(& vec[5]) ), 
+              try!( parse::real(& vec[6]) ),
+            ) 
+          },
+          n => Err(
+            format!(
+              "arity mismatch, expected {} but got {}: {:?}",
+              Self::arity(), n, vec
+            )
+            
+          ),
+        }
+      }
 
-  fn init(input: Self::Input) -> Result<Self, String> {
+*/   fn init(input: Self::Input) -> Self {
     // |===| Retrieving inputs.
     let svar_Input = input.0 ;
     let svar_Now = input.1 ;
@@ -360,16 +364,16 @@ impl Sys for Compute_calc {
     let svar_error = (svar_Setpoint - svar_Input) ;
     let svar_abs_0 = 0f64 ;
     let svar_abs_2 = (((svar_Kp * svar_error) + (((svar_Ki * svar_error) * svar_SampleTime) / 1000f64)) - (((svar_Kd * svar_dInput) * 1000f64) / svar_SampleTime)) ;
-    let limit_1 = try!( Limit::init( (
+    let limit_1 = Limit::init( (
       svar_abs_0,
-    ) ) ) ;
+    ) ) ;
     let (
       svar_abs_1,
     ) = limit_1.output() ;
     
-    let limit_0 = try!( Limit::init( (
+    let limit_0 = Limit::init( (
       svar_abs_2,
-    ) ) ) ;
+    ) ) ;
     let (
       svar_abs_3,
     ) = limit_0.output() ;
@@ -383,7 +387,7 @@ impl Sys for Compute_calc {
     
     
     // |===| Returning initial state.
-    Ok( Compute_calc {
+    Compute_calc {
       // |===| Inputs.
       svar_Input: svar_Input,
       svar_Now: svar_Now,
@@ -408,10 +412,10 @@ impl Sys for Compute_calc {
       // |===| Calls.
       limit_1: limit_1,
       limit_0: limit_0,
-    } )
+    } 
   }
 
-  fn next(mut self, input: Self::Input) -> Result<Self, String> {
+  fn next(&mut self, input: Self::Input) {
     // |===| Retrieving inputs.
     let svar_Input = input.0 ;
     let svar_Now = input.1 ;
@@ -426,18 +430,18 @@ impl Sys for Compute_calc {
     let svar_error = (svar_Setpoint - svar_Input) ;
     let svar_abs_0 = (self.svar_outputSum + (((svar_Ki * svar_error) * svar_SampleTime) / 1000f64)) ;
     let svar_abs_2 = (((svar_Kp * svar_error) + (((svar_Ki * svar_error) * svar_SampleTime) / 1000f64)) - (((svar_Kd * svar_dInput) * 1000f64) / svar_SampleTime)) ;
-    let limit_1 = try!( self.limit_1.next( (
+    /*let limit_1 = */ self.limit_1.next( (
       svar_abs_0,
-    ) ) ) ;
+    ) ) ;
     let (
       svar_abs_1,
-    ) = limit_1.output() ;
-    let limit_0 = try!( self.limit_0.next( (
+    ) = self.limit_1.output() ;
+    /*let limit_0 = */ self.limit_0.next( (
       svar_abs_2,
-    ) ) ) ;
+    ) ) ;
     let (
       svar_abs_3,
-    ) = limit_0.output() ;
+    ) = self.limit_0.output() ;
     let svar_Output = svar_abs_3 ;
     let svar_outputSum = svar_abs_1 ;
     
@@ -470,22 +474,22 @@ impl Sys for Compute_calc {
     self.svar_dInput = svar_dInput ;
     
     // |===| Calls.
-    self.limit_1 = limit_1 ;
-    self.limit_0 = limit_0 ;
+    /*self.limit_1 = limit_1 ;
+    self.limit_0 = limit_0 ;*/ 
     
     // |===| Return new state.
-    Ok( self )
+    /*Ok( self )*/
   }
 
   fn output(& self) -> Self::Output {(
     self.svar_Output,
   )}
-  fn output_str(& self) -> String {
-    format!(
-      "{}",
-      self.svar_Output
-    )
-  }
+/*  fn output_str(& self) -> String {
+      format!(
+        "{}",
+        self.svar_Output
+      )
+    }*/
 }
 
 /// Stores the state for sub-node `limit`.
@@ -514,7 +518,8 @@ impl Sys for Compute_calc {
 ///
 /// No assumptions for this system.
 ///
-pub struct Limit {
+#[repr(C)]
+  pub struct Limit {
   /// Input: `limit.usr.x`
   pub svar_x: Real,
 
@@ -531,25 +536,25 @@ impl Sys for Limit {
   type Output = (
     Real, // svar_y (limit.usr.y)
   ) ;
-  fn arity() -> usize { 1 }
-  fn input_of(vec: Vec<String>) -> Result<Self::Input, String> {
-    match vec.len() {
-      n if n == Self::arity() => {
-        Ok( (
-          try!( parse::real(& vec[0]) ),
-        ) )
-      },
-      n => Err(
-        format!(
-          "arity mismatch, expected {} but got {}: {:?}",
-          Self::arity(), n, vec
-        )
-        
-      ),
-    }
-  }
+/*  fn arity() -> usize { 1 }
+*//*  fn input_of(vec: Vec<String>) -> Result<Self::Input, String> {
+        match vec.len() {
+          n if n == Self::arity() => {
+            (
+              try!( parse::real(& vec[0]) ),
+            ) 
+          },
+          n => Err(
+            format!(
+              "arity mismatch, expected {} but got {}: {:?}",
+              Self::arity(), n, vec
+            )
+            
+          ),
+        }
+      }
 
-  fn init(input: Self::Input) -> Result<Self, String> {
+*/   fn init(input: Self::Input) -> Self {
     // |===| Retrieving inputs.
     let svar_x = input.0 ;
     
@@ -562,7 +567,7 @@ impl Sys for Limit {
     
     
     // |===| Returning initial state.
-    Ok( Limit {
+    Limit {
       // |===| Inputs.
       svar_x: svar_x,
       
@@ -574,10 +579,10 @@ impl Sys for Limit {
       
       // |===| Calls.
       
-    } )
+    } 
   }
 
-  fn next(mut self, input: Self::Input) -> Result<Self, String> {
+  fn next(&mut self, input: Self::Input) {
     // |===| Retrieving inputs.
     let svar_x = input.0 ;
     
@@ -601,28 +606,28 @@ impl Sys for Limit {
     
     
     // |===| Calls.
-    
+    /**/ 
     
     // |===| Return new state.
-    Ok( self )
+    /*Ok( self )*/
   }
 
   fn output(& self) -> Self::Output {(
     self.svar_y,
   )}
-  fn output_str(& self) -> String {
-    format!(
-      "{}",
-      self.svar_y
-    )
-  }
+/*  fn output_str(& self) -> String {
+      format!(
+        "{}",
+        self.svar_y
+      )
+    }*/
 }
 
 
 
 /// Types and structures for systems.
 pub mod helpers {
-  use std::io::{ Stdin, stdin } ;
+ /* use std::io::{ Stdin, stdin } ;
   use std::process::exit ;
 
   /// Prints usage.
@@ -696,7 +701,7 @@ Default system: \"compute\".\
     } ;
     // If no argument given, run top system.
     super::Compute::run()
-  }
+  }*/
 
   /// Alias for `i64`.
   pub type Int = i64 ;
@@ -706,7 +711,7 @@ Default system: \"compute\".\
   pub type Bool = bool ;
 
   /// Stores an `Stdin` and a buffer to read lines.
-  pub struct InputReader {
+   /* pub struct InputReader {
     /// Standard input.
     stdin: Stdin,
     /// String buffer.
@@ -750,7 +755,7 @@ Default system: \"compute\".\
       } ;
       Ok(vec)
     }
-  }
+  } */
 
   /// Trait all systems must implement.
   pub trait Sys: Sized {
@@ -759,15 +764,15 @@ Default system: \"compute\".\
     /// Type of outputs.
     type Output ;
     /// Number of inputs expected.
-    fn arity() -> usize ;
+    /*fn arity() -> usize ;
     /// Parses a vector of inputs.
-    fn input_of(Vec<String>) -> Result<Self::Input, String> ;
+    fn input_of(Vec<String>) -> Result<Self::Input, String> ;*/
     /// Initial state of the system.
-    fn init(Self::Input) -> Result<Self, String> ;
+    fn init(input: Self::Input) -> Self ;
     /// Computes the next step.
-    fn next(self, Self::Input) -> Result<Self, String> ;
+    fn next(&mut self, input: Self::Input) ;
     /// Reads inputs from standard input, computes initial state, prints output.
-    fn read_init(reader: & mut InputReader) -> Result<Self, String> {
+    /* fn read_init(reader: & mut InputReader) -> Result<Self, String> {
       match Self::input_of( try!(reader.read_inputs()) ) {
         Ok(inputs) => {
           let init = try!( Self::init(inputs) ) ;
@@ -776,9 +781,13 @@ Default system: \"compute\".\
         },
         Err(s) => Err(s),
       }
+    } */
+    fn read_init(input: Self::Input) -> Self{
+      Self::init(input)
     }
+
     /// Reads inputs from standard input, computes next step, prints output.
-    fn read_next(self, reader: & mut InputReader) -> Result<Self, String> {
+    /* fn read_next(self, reader: & mut InputReader) -> Result<Self, String> {
       match Self::input_of( try!(reader.read_inputs()) ) {
         Ok(inputs) => {
           let next = try!( self.next(inputs) ) ;
@@ -787,13 +796,17 @@ Default system: \"compute\".\
         },
         Err(s) => Err(s),
       }
+    } */
+    fn read_next(&mut self, input: Self::Input){
+      self.next(input);
     }
+
     /// Output of the system.
     fn output(& self) -> Self::Output ;
-    /// String representation of the output.
-    fn output_str(& self) -> String ;
-    /// Runs a never-ending, read-eval-print loop on the system.
-    fn run() -> ! {
+    // String representation of the output.
+    // fn output_str(& self) -> String ;
+    // Runs a never-ending, read-eval-print loop on the system.
+    /* fn run() -> ! {
       let mut reader = InputReader::mk() ;
       let mut state = match Self::read_init(& mut reader) {
         Ok(init) => init,
@@ -811,12 +824,12 @@ Default system: \"compute\".\
           }
         }
       }
-    }
+    } */
   }
 }
 
-/// Parsing functions.
-pub mod parse {
+// Parsing functions.
+/* pub mod parse {
   use helpers::{ Int, Real, Bool } ;
   use std::fmt::Display ;
   use std::str::FromStr ;
@@ -853,6 +866,6 @@ pub mod parse {
   pub fn real(s: & str) -> Result<Real, String> {
     generic(s, |s| Real::from_str(s), "a real")
   }
-}
+} */
 
 
