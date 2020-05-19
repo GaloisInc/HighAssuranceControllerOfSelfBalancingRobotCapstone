@@ -13,6 +13,15 @@
 [submodule "otis-AK/otis-server"]
 	path = otis-AK/otis-server
 	url = https://github.com/Artem1199/otis-server
-[submodule "otis-AK/otis-arduino"]
-	path = otis-AK/otis-arduino
+[submodule "kind2/kind2"]
+	path = kind2/kind2
+	url = https://github.com/Artem1199/kind2
+[submodule "AK-Submodules/otis-arduino"]
+	path = AK-Submodules/otis-arduino
 	url = https://github.com/Artem1199/otis-arduino
+[submodule "AK-Submodules/otis-tcp"]
+	path = AK-Submodules/otis-tcp
+	url = https://github.com/Artem1199/otis-tcp
+[submodule "AK-Submodules/otis-server"]
+	path = AK-Submodules/otis-server
+	url = https://github.com/Artem1199/otis-server
