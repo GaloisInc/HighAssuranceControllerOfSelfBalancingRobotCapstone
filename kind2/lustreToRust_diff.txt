@@ -1,0 +1,270 @@
+--- lustreToRust.ml	2020-05-09 11:54:59.000000000 -0700
++++ Git/Galois/kind2/kind2/src/lustre/lustreToRust.ml	2020-05-19 01:19:53.420871675 -0700
+@@ -86,6 +86,8 @@
+   unused_variables, unused_parens
+ )]
+ 
++#![no_std]
++
+ use helpers::* ;
+ " blah name typ typ
+ 
+@@ -99,7 +101,7 @@
+ let fmt_main fmt () = Format.fprintf fmt "\
+ /// Entry point.
+ fn main() {
+-  clap_and_run()
++  // clap_and_run()
+ }
+ "
+ 
+@@ -108,7 +110,7 @@
+ let fmt_helpers fmt systems = Format.fprintf fmt "\
+ /// Types and structures for systems.
+ pub mod helpers {
+-  use std::io::{ Stdin, stdin } ;
++ /* use std::io::{ Stdin, stdin } ;
+   use std::process::exit ;
+ 
+   /// Prints usage.
+@@ -160,7 +162,7 @@
+     } ;
+     // If no argument given, run top system.
+     super::%s::run()
+-  }
++  }*/
+ 
+   /// Alias for `i64`.
+   pub type Int = i64 ;
+@@ -170,7 +172,7 @@
+   pub type Bool = bool ;
+ 
+   /// Stores an `Stdin` and a buffer to read lines.
+-  pub struct InputReader {
++   /* pub struct InputReader {
+     /// Standard input.
+     stdin: Stdin,
+     /// String buffer.
+@@ -214,7 +216,7 @@
+       } ;
+       Ok(vec)
+     }
+-  }
++  } */
+ 
+   /// Trait all systems must implement.
+   pub trait Sys: Sized {
+@@ -223,15 +225,15 @@
+     /// Type of outputs.
+     type Output ;
+     /// Number of inputs expected.
+-    fn arity() -> usize ;
++    /*fn arity() -> usize ;
+     /// Parses a vector of inputs.
+-    fn input_of(Vec<String>) -> Result<Self::Input, String> ;
++    fn input_of(Vec<String>) -> Result<Self::Input, String> ;*/
+     /// Initial state of the system.
+-    fn init(Self::Input) -> Result<Self, String> ;
++    fn init(input: Self::Input) -> Self ;
+     /// Computes the next step.
+-    fn next(self, Self::Input) -> Result<Self, String> ;
++    fn next(&mut self, input: Self::Input) ;
+     /// Reads inputs from standard input, computes initial state, prints output.
+-    fn read_init(reader: & mut InputReader) -> Result<Self, String> {
++    /* fn read_init(reader: & mut InputReader) -> Result<Self, String> {
+       match Self::input_of( try!(reader.read_inputs()) ) {
+         Ok(inputs) => {
+           let init = try!( Self::init(inputs) ) ;
+@@ -240,9 +242,13 @@
+         },
+         Err(s) => Err(s),
+       }
++    } */
++    fn read_init(input: Self::Input) -> Self{
++      Self::init(input)
+     }
++
+     /// Reads inputs from standard input, computes next step, prints output.
+-    fn read_next(self, reader: & mut InputReader) -> Result<Self, String> {
++    /* fn read_next(self, reader: & mut InputReader) -> Result<Self, String> {
+       match Self::input_of( try!(reader.read_inputs()) ) {
+         Ok(inputs) => {
+           let next = try!( self.next(inputs) ) ;
+@@ -251,13 +257,17 @@
+         },
+         Err(s) => Err(s),
+       }
++    } */
++    fn read_next(&mut self, input: Self::Input){
++      self.next(input);
+     }
++
+     /// Output of the system.
+     fn output(& self) -> Self::Output ;
+-    /// String representation of the output.
+-    fn output_str(& self) -> String ;
+-    /// Runs a never-ending, read-eval-print loop on the system.
+-    fn run() -> ! {
++    // String representation of the output.
++    // fn output_str(& self) -> String ;
++    // Runs a never-ending, read-eval-print loop on the system.
++    /* fn run() -> ! {
+       let mut reader = InputReader::mk() ;
+       let mut state = match Self::read_init(& mut reader) {
+         Ok(init) => init,
+@@ -275,12 +285,12 @@
+           }
+         }
+       }
+-    }
++    } */
+   }
+ }
+ 
+-/// Parsing functions.
+-pub mod parse {
++// Parsing functions.
++/* pub mod parse {
+   use helpers::{ Int, Real, Bool } ;
+   use std::fmt::Display ;
+   use std::str::FromStr ;
+@@ -317,7 +327,7 @@
+   pub fn %s(s: & str) -> Result<Real, String> {
+     generic(s, |s| Real::from_str(s), \"a real\")
+   }
+-}
++} */
+ "
+ (pp_print_list
+   ( fun fmt { N.name ; N.inputs ; N.outputs } ->
+@@ -1009,7 +1019,8 @@
+   ) ;
+ 
+   (* Struct header. *)
+-  Format.fprintf fmt "pub struct %s {" typ ;
++  Format.fprintf fmt "#[repr(C)]
++  pub struct %s {" typ ;
+ 
+   (* Fields. *)
+   inputs |> List.iter (fun (_, svar) ->
+@@ -1090,11 +1101,11 @@
+ 
+   (* Arity. *)
+   List.length inputs
+-  |> Format.fprintf fmt "  fn arity() -> usize { %d }@." ;
++  |> Format.fprintf fmt "/*  fn arity() -> usize { %d }@.*/" ;
+ 
+   (* Input parsing. *)
+   let input_cpt = ref 0 in
+-  Format.fprintf fmt "  \
++  Format.fprintf fmt "/*  \
+       @[<v>\
+         fn input_of(vec: Vec<String>) -> Result<Self::Input, String> {@   \
+           @[<v>\
+@@ -1102,7 +1113,7 @@
+               @[<v>\
+                 n if n == Self::arity() => {@   \
+                   @[<v>\
+-                    Ok( (@   @[<v>%a@],@ ) )\
++                     (@   @[<v>%a@],@ ) \
+                   @]@ \
+                 },@ \
+                 n => Err(@   \
+@@ -1118,7 +1129,7 @@
+           @]@ \
+         }\
+       @]@.@.\
+-    "
++    */ "
+     ( pp_print_list (fun fmt (_, svar) ->
+         Format.fprintf fmt "try!( parse::%s(& vec[%d]) )" (
+           SVar.type_of_state_var svar
+@@ -1138,7 +1149,7 @@
+   ) ;
+ 
+   Format.fprintf fmt "  \
+-      fn init(input: Self::Input) -> Result<Self, String> {@.    \
++      fn init(input: Self::Input) -> Self {@.    \
+         @[<v>\
+           // |===| Retrieving inputs.@ \
+           %a@ @ \
+@@ -1148,14 +1159,14 @@
+           %a@ @ \
+           %a\
+           // |===| Returning initial state.@ \
+-          Ok( %s {@   \
++           %s {@   \
+             @[<v>\
+               // |===| Inputs.@ %a@ @ \
+               // |===| Outputs.@ %a@ @ \
+               // |===| Locals.@ %a@ @ \
+               // |===| Calls.@ %a\
+             @]@ \
+-          } )\
++          } \
+         @]@.  \
+       }@.@.\
+     "
+@@ -1181,7 +1192,7 @@
+         ) ->
+           Format.fprintf fmt
+             "\
+-              let %s = try!( %s::init( (@   @[<v>%a,@]@ ) ) ) ;@ \
++              let %s = %s::init( (@   @[<v>%a,@]@ ) ) ;@ \
+               let (@   @[<v>%a,@]@ ) = %s.output() ;@ \
+             "
+             (id_of_call cnt call)
+@@ -1285,7 +1296,7 @@
+   ) ;
+ 
+   Format.fprintf fmt "  \
+-      fn next(mut self, input: Self::Input) -> Result<Self, String> {@.    \
++      fn next(&mut self, input: Self::Input) {@.    \
+         @[<v>\
+           // |===| Retrieving inputs.@ \
+           %a@ @ \
+@@ -1299,8 +1310,8 @@
+           // |===| Inputs.@ %a@ @ \
+           // |===| Outputs.@ %a@ @ \
+           // |===| Locals.@ %a@ @ \
+-          // |===| Calls.@ %a@ @ \
+-          // |===| Return new state.@ Ok( self )\
++          // |===| Calls.@ /*%a*/ @ @ \
++          // |===| Return new state.@ /*Ok( self )*/\
+         @]@.  \
+       }@.@.\
+     "
+@@ -1327,8 +1338,8 @@
+         ) ->
+           Format.fprintf fmt
+             "\
+-              let %s = try!( self.%s.next( (@   @[<v>%a,@]@ ) ) ) ;@ \
+-              let (@   @[<v>%a,@]@ ) = %s.output() ;\
++              /*let %s = */ self.%s.next( (@   @[<v>%a,@]@ ) ) ;@ \
++              let (@   @[<v>%a,@]@ ) = self.%s.output() ;\
+             "
+             (id_of_call cnt call)
+             (id_of_call cnt call)
+@@ -1425,7 +1436,7 @@
+   ) ;
+ 
+   (* Output to string. *)
+-  Format.fprintf fmt "  \
++  Format.fprintf fmt "/*  \
+     @[<v>\
+       fn output_str(& self) -> String {@   \
+         @[<v>\
+@@ -1433,7 +1444,7 @@
+             @[<v>\"%a\",@ %a@]@ \
+           )\
+         @]@ \
+-      }\
++      }*/\
+     @]@.\
+   " (
+     pp_print_list (fun fmt _ -> Format.fprintf fmt "{}") ", \\@ "
+@@ -2075,4 +2086,3 @@
+ 
+ 
+ 
+-
