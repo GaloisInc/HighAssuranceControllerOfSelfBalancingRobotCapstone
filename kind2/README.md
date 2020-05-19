@@ -35,12 +35,12 @@
 
 ## Kind2 Embedded Code generator
 
-`/Artem1199/Kind2` is branch of kind2 with a modified version of `lustreToRust.ml` that is responsible for the Rust code generation from lustre.  Nothing else in the branch has been modified, so lustreToRust.ml can be placed into any copy of Kind2 and compile Kind2 with a code generator.  Kind2 requires multiple dependencies, follow the kind2 [readme](https://github.com/kind2-mc/kind2).
+`/Artem1199/Kind2` is branch of kind2 with a modified version of `lustreToRust.ml` that is responsible for the Rust code generation from lustre.  Nothing else in the branch has been modified, so `lustreToRust.ml` can be placed into any copy of Kind2 and compile Kind2 with a code generator.  Kind2 requires multiple dependencies, follow the kind2 [readme](https://github.com/kind2-mc/kind2).
 
-I've found the easiest way to test this build and use this embedded version of kind2 is to run `ocamlbuild -j 0 -pkg yojson -cflags -w,@P@U@F kind2.native` in the Artem1199/kind2/src file after running ./autogen.sh as per the kind2 readme.  This will generate `kind2.native` in `_build`.  A copy of this build can be found in the above folder `lus/kind2.native`.  Run `kind2.native pid2.lus --compile=true` to generate a folder with Rust code.
+I've found the easiest way to test this build and use this embedded version of kind2 is to run `ocamlbuild -j 0 -pkg yojson -cflags -w,@P@U@F kind2.native` in the `Artem1199/kind2/src` file after running `./autogen.sh` as per the kind2 readme.  This will generate `kind2.native` in `_build`.  A copy of this build can be found in the above folder `lus/kind2.native`.  Run `kind2.native pid2.lus --compile=true` to generate a folder with Rust code.
 
-For reference I've generated a file difference between the original lustreToRust.ml and the 'embedded' version.  All of the modifications I made where done by commenting out sections of the string that is used in Ocaml to generate the Rust code.  None of the Ocaml code has been modified, and very little of the core state machine is modified.
+For reference I've generated a file diff between the original `lustreToRust.ml` and the 'embedded' version in this folder.  All of the modifications I made where done by commenting out sections of the string that is used in Ocaml to generate the Rust code.  None of the Ocaml code has been modified, and very little of the core state machine is modified.
 
-The most significant change is the use of the mutable references for structs.  Previously the generated Rust code would take ownership of the structs, but now C++/Arduino is responsible for passing a pointer to the memory, so the Rust code no longer creates any objects like before.
+The most significant change is the use of the mutable references for structs.  Previously the generated Rust code would take ownership of the structs, but now C++/Arduino is responsible for passing a pointer to the memory, so the Rust code no longer creates any objects like before.  Additionally the use of `Error` has been removed.
 
 `pid2.lus` is a working pid controller that I have already tested on the MKR1010.
