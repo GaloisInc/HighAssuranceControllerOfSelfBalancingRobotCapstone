@@ -28,20 +28,19 @@ fn main() {
 /// |:---:|:---|
 /// | `i` | Int |
 /// | `x` | Real |
+/// | `first` | Bool |
 ///
 /// # Outputs
 ///
 /// | Lustre identifier | Type |
 /// |:---:|:---|
-/// | `y1` | Real |
-/// | `y2` | Real |
+/// | `y` | Real |
 ///
 /// # Sub systems
 ///
 /// | Lustre identifier | Struct | Inputs | Outputs | Position |
 /// |:---:|:---:|:---:|:---:|:---:|
-/// | `center_calc1` | [Center_calc1](struct.Center_calc1.html) | `i`, `x`, `abs_2` | `abs_3` | [fuzzy.lus line 70](../src/lus/fuzzy.lus.html#70) |
-/// | `center_calc1` | [Center_calc1](struct.Center_calc1.html) | `i`, `x`, `abs_0` | `abs_1` | [fuzzy.lus line 68](../src/lus/fuzzy.lus.html#68) |
+/// | `center_calcp` | [Center_calcp](struct.Center_calcp.html) | `i`, `x`, `first` | `abs_0` | [fuzzy.lus line 61](../src/lus/fuzzy.lus.html#61) |
 ///
 /// # Assertions
 ///
@@ -57,20 +56,14 @@ fn main() {
   pub svar_i: Int,
   /// Input: `pkmfuzzy.usr.x`
   pub svar_x: Real,
+  /// Input: `pkmfuzzy.usr.first`
+  pub svar_first: Bool,
 
-  /// Output: `pkmfuzzy.usr.y1`
-  pub svar_y1: Real,
-  /// Output: `pkmfuzzy.usr.y2`
-  pub svar_y2: Real,
+  /// Output: `pkmfuzzy.usr.y`
+  pub svar_y: Real,
 
-  /// Local, call: `pkmfuzzy.res.abs_3`
-  pub svar_abs_3: Real,
-  /// Local, invisible local: `pkmfuzzy.res.abs_2`
-  pub svar_abs_2: Bool,
-  /// Local, call: `pkmfuzzy.res.abs_1`
-  pub svar_abs_1: Real,
-  /// Local, invisible local: `pkmfuzzy.res.abs_0`
-  pub svar_abs_0: Bool,
+  /// Local, call: `pkmfuzzy.res.abs_0`
+  pub svar_abs_0: Real,
   /// Local, local: `pkmfuzzy.impl.usr.center`
   pub svar_center: Bool,
   /// Local, local: `pkmfuzzy.impl.usr.right`
@@ -81,41 +74,30 @@ fn main() {
   pub svar_d: Int,
   /// Local, local: `pkmfuzzy.impl.usr.pcenter7`
   pub svar_pcenter7: Real,
-  /// Local, local: `pkmfuzzy.impl.usr.pcenter6`
-  pub svar_pcenter6: Real,
-  /// Local, local: `pkmfuzzy.impl.usr.pcenter5`
-  pub svar_pcenter5: Real,
-  /// Local, local: `pkmfuzzy.impl.usr.pcenter4`
-  pub svar_pcenter4: Real,
-  /// Local, local: `pkmfuzzy.impl.usr.pcenter3`
-  pub svar_pcenter3: Real,
-  /// Local, local: `pkmfuzzy.impl.usr.pcenter2`
-  pub svar_pcenter2: Real,
   /// Local, local: `pkmfuzzy.impl.usr.pcenter1`
   pub svar_pcenter1: Real,
 
-  /// Call to `center_calc1` ([fuzzy.lus line 68](../src/lus/fuzzy.lus.html#68)).
-  pub center_calc1_1: Center_calc1,
-  /// Call to `center_calc1` ([fuzzy.lus line 70](../src/lus/fuzzy.lus.html#70)).
-  pub center_calc1_0: Center_calc1,
+  /// Call to `center_calcp` ([fuzzy.lus line 61](../src/lus/fuzzy.lus.html#61)).
+  pub center_calcp_0: Center_calcp,
 }
 
 impl Sys for Pkmfuzzy {
   type Input = (
     Int, // svar_i (pkmfuzzy.usr.i)
     Real, // svar_x (pkmfuzzy.usr.x)
+    Bool, // svar_first (pkmfuzzy.usr.first)
   ) ;
   type Output = (
-    Real, // svar_y1 (pkmfuzzy.usr.y1)
-    Real, // svar_y2 (pkmfuzzy.usr.y2)
+    Real, // svar_y (pkmfuzzy.usr.y)
   ) ;
-/*  fn arity() -> usize { 2 }
+/*  fn arity() -> usize { 3 }
 *//*  fn input_of(vec: Vec<String>) -> Result<Self::Input, String> {
         match vec.len() {
           n if n == Self::arity() => {
             (
               try!( parse::int(& vec[0]) ), 
-              try!( parse::real(& vec[1]) ),
+              try!( parse::real(& vec[1]) ), 
+              try!( parse::bool(& vec[2]) ),
             ) 
           },
           n => Err(
@@ -132,41 +114,25 @@ impl Sys for Pkmfuzzy {
     // |===| Retrieving inputs.
     let svar_i = input.0 ;
     let svar_x = input.1 ;
+    let svar_first = input.2 ;
     
     // |===| Computing initial state.
     let svar_pcenter1 = - 1f64 ;
-    let svar_pcenter2 = - 19f64 / 20f64 ;
-    let svar_pcenter3 = - 9f64 / 10f64 ;
-    let svar_pcenter4 = 0f64 ;
-    let svar_pcenter5 = 9f64 / 10f64 ;
-    let svar_pcenter6 = 19f64 / 20f64 ;
     let svar_pcenter7 = 1f64 ;
     let svar_d = 7 ;
     let svar_left = ((svar_i == 1) & (svar_x < svar_pcenter1)) ;
     let svar_right = ((svar_i == svar_d) & (svar_x > svar_pcenter7)) ;
     let svar_center = ( if (svar_left | svar_right) { false } else {true } ) ;
-    let svar_abs_0 = true ;
-    let svar_abs_2 = false ;
-    let center_calc1_1 = Center_calc1::init( (
+    let center_calcp_0 = Center_calcp::init( (
       svar_i,
       svar_x,
+      svar_first,
+    ) ) ;
+    let (
       svar_abs_0,
-    ) ) ;
-    let (
-      svar_abs_1,
-    ) = center_calc1_1.output() ;
+    ) = center_calcp_0.output() ;
     
-    let center_calc1_0 = Center_calc1::init( (
-      svar_i,
-      svar_x,
-      svar_abs_2,
-    ) ) ;
-    let (
-      svar_abs_3,
-    ) = center_calc1_0.output() ;
-    
-    let svar_y2 = ( if svar_left { 0f64 } else {( if svar_right { 1f64 } else {svar_abs_3 } ) } ) ;
-    let svar_y1 = ( if svar_left { 1f64 } else {( if svar_right { 0f64 } else {svar_abs_1 } ) } ) ;
+    let svar_y = ( if (svar_left & svar_first) { 1f64 } else {( if (svar_left & (! svar_first)) { 0f64 } else {( if (svar_right & svar_first) { 1f64 } else {( if (svar_right & (! svar_first)) { 0f64 } else {svar_abs_0 } ) } ) } ) } ) ;
     
     // |===| Checking assertions.
     
@@ -178,31 +144,22 @@ impl Sys for Pkmfuzzy {
       // |===| Inputs.
       svar_i: svar_i,
       svar_x: svar_x,
+      svar_first: svar_first,
       
       // |===| Outputs.
-      svar_y1: svar_y1,
-      svar_y2: svar_y2,
+      svar_y: svar_y,
       
       // |===| Locals.
-      svar_abs_3: svar_abs_3,
-      svar_abs_2: svar_abs_2,
-      svar_abs_1: svar_abs_1,
       svar_abs_0: svar_abs_0,
       svar_center: svar_center,
       svar_right: svar_right,
       svar_left: svar_left,
       svar_d: svar_d,
       svar_pcenter7: svar_pcenter7,
-      svar_pcenter6: svar_pcenter6,
-      svar_pcenter5: svar_pcenter5,
-      svar_pcenter4: svar_pcenter4,
-      svar_pcenter3: svar_pcenter3,
-      svar_pcenter2: svar_pcenter2,
       svar_pcenter1: svar_pcenter1,
       
       // |===| Calls.
-      center_calc1_1: center_calc1_1,
-      center_calc1_0: center_calc1_0,
+      center_calcp_0: center_calcp_0,
     } 
   }
 
@@ -210,39 +167,24 @@ impl Sys for Pkmfuzzy {
     // |===| Retrieving inputs.
     let svar_i = input.0 ;
     let svar_x = input.1 ;
+    let svar_first = input.2 ;
     
     // |===| Computing next state.
     let svar_pcenter1 = - 1f64 ;
-    let svar_pcenter2 = - 19f64 / 20f64 ;
-    let svar_pcenter3 = - 9f64 / 10f64 ;
-    let svar_pcenter4 = 0f64 ;
-    let svar_pcenter5 = 9f64 / 10f64 ;
-    let svar_pcenter6 = 19f64 / 20f64 ;
     let svar_pcenter7 = 1f64 ;
     let svar_d = 7 ;
     let svar_left = ((svar_i == 1) & (svar_x < svar_pcenter1)) ;
     let svar_right = ((svar_i == svar_d) & (svar_x > svar_pcenter7)) ;
     let svar_center = ( if (svar_left | svar_right) { false } else {true } ) ;
-    let svar_abs_0 = true ;
-    let svar_abs_2 = false ;
-    /*let center_calc1_1 = */ self.center_calc1_1.next( (
+    /*let center_calcp_0 = */ self.center_calcp_0.next( (
       svar_i,
       svar_x,
+      svar_first,
+    ) ) ;
+    let (
       svar_abs_0,
-    ) ) ;
-    let (
-      svar_abs_1,
-    ) = self.center_calc1_1.output() ;
-    /*let center_calc1_0 = */ self.center_calc1_0.next( (
-      svar_i,
-      svar_x,
-      svar_abs_2,
-    ) ) ;
-    let (
-      svar_abs_3,
-    ) = self.center_calc1_0.output() ;
-    let svar_y2 = ( if svar_left { 0f64 } else {( if svar_right { 1f64 } else {svar_abs_3 } ) } ) ;
-    let svar_y1 = ( if svar_left { 1f64 } else {( if svar_right { 0f64 } else {svar_abs_1 } ) } ) ;
+    ) = self.center_calcp_0.output() ;
+    let svar_y = ( if (svar_left & svar_first) { 1f64 } else {( if (svar_left & (! svar_first)) { 0f64 } else {( if (svar_right & svar_first) { 1f64 } else {( if (svar_right & (! svar_first)) { 0f64 } else {svar_abs_0 } ) } ) } ) } ) ;
     
     // |===| Checking assertions.
     
@@ -254,51 +196,39 @@ impl Sys for Pkmfuzzy {
     // |===| Inputs.
     self.svar_i = svar_i ;
     self.svar_x = svar_x ;
+    self.svar_first = svar_first ;
     
     // |===| Outputs.
-    self.svar_y1 = svar_y1 ;
-    self.svar_y2 = svar_y2 ;
+    self.svar_y = svar_y ;
     
     // |===| Locals.
-    self.svar_abs_3 = svar_abs_3 ;
-    self.svar_abs_2 = svar_abs_2 ;
-    self.svar_abs_1 = svar_abs_1 ;
     self.svar_abs_0 = svar_abs_0 ;
     self.svar_center = svar_center ;
     self.svar_right = svar_right ;
     self.svar_left = svar_left ;
     self.svar_d = svar_d ;
     self.svar_pcenter7 = svar_pcenter7 ;
-    self.svar_pcenter6 = svar_pcenter6 ;
-    self.svar_pcenter5 = svar_pcenter5 ;
-    self.svar_pcenter4 = svar_pcenter4 ;
-    self.svar_pcenter3 = svar_pcenter3 ;
-    self.svar_pcenter2 = svar_pcenter2 ;
     self.svar_pcenter1 = svar_pcenter1 ;
     
     // |===| Calls.
-    /*self.center_calc1_1 = center_calc1_1 ;
-    self.center_calc1_0 = center_calc1_0 ;*/ 
+    /*self.center_calcp_0 = center_calcp_0 ;*/ 
     
     // |===| Return new state.
     /*Ok( self )*/
   }
 
   fn output(& self) -> Self::Output {(
-    self.svar_y1,
-    self.svar_y2,
+    self.svar_y,
   )}
 /*  fn output_str(& self) -> String {
       format!(
-        "{}, \
-        {}",
-        self.svar_y1,
-        self.svar_y2
+        "{}",
+        self.svar_y
       )
     }*/
 }
 
-/// Stores the state for sub-node `center_calc1`.
+/// Stores the state for sub-node `center_calcp`.
 ///
 /// # Inputs
 ///
@@ -327,34 +257,34 @@ impl Sys for Pkmfuzzy {
 /// No assumptions for this system.
 ///
 #[repr(C)]
-  pub struct Center_calc1 {
-  /// Input: `center_calc1.usr.i`
+  pub struct Center_calcp {
+  /// Input: `center_calcp.usr.i`
   pub svar_i: Int,
-  /// Input: `center_calc1.usr.x`
+  /// Input: `center_calcp.usr.x`
   pub svar_x: Real,
-  /// Input: `center_calc1.usr.first`
+  /// Input: `center_calcp.usr.first`
   pub svar_first: Bool,
 
-  /// Output: `center_calc1.usr.y`
+  /// Output: `center_calcp.usr.y`
   pub svar_y: Real,
 
-  /// Local, local: `center_calc1.impl.usr.center_a`
+  /// Local, local: `center_calcp.impl.usr.center_a`
   pub svar_center_a: Real,
-  /// Local, local: `center_calc1.impl.usr.center`
+  /// Local, local: `center_calcp.impl.usr.center`
   pub svar_center: Real,
-  /// Local, local: `center_calc1.impl.usr.i_incr`
+  /// Local, local: `center_calcp.impl.usr.i_incr`
   pub svar_i_incr: Int,
 
 }
 
-impl Sys for Center_calc1 {
+impl Sys for Center_calcp {
   type Input = (
-    Int, // svar_i (center_calc1.usr.i)
-    Real, // svar_x (center_calc1.usr.x)
-    Bool, // svar_first (center_calc1.usr.first)
+    Int, // svar_i (center_calcp.usr.i)
+    Real, // svar_x (center_calcp.usr.x)
+    Bool, // svar_first (center_calcp.usr.first)
   ) ;
   type Output = (
-    Real, // svar_y (center_calc1.usr.y)
+    Real, // svar_y (center_calcp.usr.y)
   ) ;
 /*  fn arity() -> usize { 3 }
 *//*  fn input_of(vec: Vec<String>) -> Result<Self::Input, String> {
@@ -394,7 +324,7 @@ impl Sys for Center_calc1 {
     
     
     // |===| Returning initial state.
-    Center_calc1 {
+    Center_calcp {
       // |===| Inputs.
       svar_i: svar_i,
       svar_x: svar_x,
@@ -477,7 +407,7 @@ pub mod helpers {
 Options:
   -h, --help
     prints this message
-  --center_calc1
+  --center_calcp
     inputs:  Int (i)
              Real (x)
              Bool (first)
@@ -485,8 +415,8 @@ Options:
   --pkmfuzzy
     inputs:  Int (i)
              Real (x)
-    outputs: Real (y1)
-             Real (y2)
+             Bool (first)
+    outputs: Real (y)
 Usage:
   Inputs (outputs) are read (printed) as comma-separated values on a single
   line.
@@ -520,7 +450,7 @@ Default system: \"pkmfuzzy\".\
           help() ;
           exit(0)
         },
-        "--center_calc1" => super::Center_calc1::run(),
+        "--center_calcp" => super::Center_calcp::run(),
         "--pkmfuzzy" => super::Pkmfuzzy::run(),
         arg => error(
           format!("unexpected argument \"{}\".", arg)

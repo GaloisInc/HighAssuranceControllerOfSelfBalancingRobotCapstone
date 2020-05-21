@@ -1,107 +1,275 @@
 (* Artem K *)
 
-node Compute(Input:real; Now:real; Setpoint:real; Kp:real; Ki:real; Kd:real; SampleTime:real;) returns(Output:real;);
+node Compute(Input:real; Now:real; Setpoint:real; SampleTime:real;) returns(Output:real;);
+var
+    dInput:real;
+    error:real;
+let
+		error = Setpoint - Input;
+		dInput = (Input - (0.0 -> pre Input)) * 1000.0/SampleTime ;
+
+        Output =  if (Now - (0.0 -> pre Now) >= SampleTime) then
+
+            kmlogic(error, dInput)
+        else
+            0.0 -> pre Output;
+tel;
+
+const pc1 = -1.0;
+const pc2 = -0.95;
+const pc3 = -0.9;
+const pc4 = 0.0;
+const pc5 = 0.9;
+const pc6 = 0.95;
+const pc7 = 1.0;
+
+const dc1 = -1.0;
+const dc2 = -0.3;
+const dc3 = -0.1;
+const dc4 = 0.0;
+const dc5 = 0.1;
+const dc6 = 0.3;
+const dc7 = 1.0;
+
+node kmlogic (pinput:real; dinput:real) returns(g:real)
+
+var
+	plo:int;
+	dlo:int;
+	ploc:int;
+	ploc_next:int;
+	dloc:int;
+	first_row_1:real;
+	first_row_2:real;
+	second_row_1:real;
+	second_row_2:real;
+	py1:real;
+	py2:real;
+	dy1:real;
+	dy2:real;
+	dindex1:int;
+	dindex2:int;
 
 let
- 	Output = 0.0;
+
+
+	-- Return location 0 to 7, before NB is 0, after PB is 7
+	plo = findlocation_p(pinput);
+	dlo = findlocation_d(dinput);
+
+	-- If 0 then 1 if 7 then 6, so all values below NB are 1, below PB are 7
+	dloc = if (dlo = 0) then 1 else if (dlo = 7) then 6 else dlo;
+	ploc = if (plo = 0) then 1 else if (plo = 7) then 6 else plo;
+
+	-- Find the grouping of rules needed for the next input of n inputs
+	dindex1 = ((dloc - 1) * 7) + 1;
+	dindex2 = (dindex1) + 7;  --equivalent to sindex2+1 (next row)
+
+	-- From a row, ploc is a value, the ploc_next is the value to the right in the row
+	-- Reference MJ KMLOGIC line 8-12, second recursion
+	ploc_next = ploc + 1;
+
+	-- first_row is in reference to KMLOGIC(n-1,input,s,R1,MFM2) recursion
+	first_row_1 = rule_base(dindex1 + ploc - 1);
+	first_row_2 = rule_base(dindex1 + ploc_next - 1);
+
+	-- second_row is in reference to KMLOGIC(n-1,input,s,R2,MFM2) recursion
+	second_row_1 = rule_base(dindex2 + ploc - 1);
+	second_row_2 = rule_base(dindex2 + ploc_next - 1);
+
+	-- caculates y1 and y2 for proportional
+	py1 = y1fuzzify(plo, pinput);
+	py2 = y2fuzzify(plo, pinput);
+
+	-- calculates y1 and y2 for derivative
+	dy1 = dy1fuzzify(dlo, dinput);
+	dy2 = dy2fuzzify(dlo, dinput);
+
+	-- in reference to g=[y1 y2]*[KMLOGIC(n-1,input,s,R1,MFM2);KMLOGIC(n-1,input,s,R2,MFM2)];
+	g = dy1 * (py1 * first_row_1 + py2 * first_row_2) + dy2 * (py1 * second_row_1 + py2 *second_row_2);
+
 tel;
 
 
 
 
-
-node dkmfuzzy (i: real; x: real) returns (y:real)
-
+node rule_base (x:int) returns (y:real)
 var
- dcenter1:real;
- dcenter2:real;
- dcenter3:real;
- dcenter4:real;
- dcenter5:real;
- dcenter6:real;
- dcenter7:real;
+	NB:real;
+	NM:real;
+	NS:real;
+	ZR:real;
+	PS:real;
+	PM:real;
+	PB:real;
 
 let
-	dcenter1 = -1.0;
- 	dcenter2 = -0.3;
- 	dcenter3 = -0.1;
- 	dcenter4 = 0.0;
- 	dcenter5 = 0.1;
- 	dcenter6 = 0.3;
- 	dcenter7 = 1.0;
 
-	y = 0.0;
+	NB = -1.0;
+	NM = -0.7;
+	NS = -0.3;
+	ZR = 0.0;
+	PS = 0.3;
+	PM = 0.7;
+	PB = 1.0;
 
+
+	y = if (x=1) then NB
+	else if (x=2) then NB
+	else if (x=3) then NB
+	else if (x=4) then NB
+	else if (x=5) then NM
+	else if (x=6) then NS
+	else if (x=7) then ZR
+
+	else if (x=8) then NB
+	else if (x=9) then NB
+	else if (x=10) then NB
+	else if (x=11) then NM
+	else if (x=12) then NS
+	else if (x=13) then ZR
+	else if (x=14) then PS
+
+	else if (x=15) then NB
+	else if (x=16) then NB
+	else if (x=17) then NM
+	else if (x=18) then NS
+	else if (x=19) then ZR
+	else if (x=20) then PS
+	else if (x=21) then PM
+
+	else if (x=22) then NB
+	else if (x=23) then NM
+	else if (x=24) then NS
+	else if (x=25) then ZR
+	else if (x=26) then PS
+	else if (x=27) then PM
+	else if (x=28) then PB
+
+	else if (x=29) then NM
+	else if (x=30) then NS
+	else if (x=31) then ZR
+	else if (x=32) then PS
+	else if (x=33) then PM
+	else if (x=34) then PB
+	else if (x=35) then PB
+
+	else if (x=36) then NS
+	else if (x=37) then ZR
+	else if (x=38) then PS
+	else if (x=39) then PM
+	else if (x=40) then PB
+	else if (x=41) then PB
+	else if (x=42) then PB
+
+	else if (x=43) then ZR
+	else if (x=44) then PS
+	else if (x=45) then PM
+	else if (x=46) then PB
+	else if (x=47) then PB
+	else if (x=48) then PB
+	else PB;
 tel;
-node pkmfuzzy (i: int; x: real) returns (y1:real; y2: real)
 
-(*LustreToRust, arrays are not supported*)
-var
- pcenter1:real;
- pcenter2:real;
- pcenter3:real;
- pcenter4:real;
- pcenter5:real;
- pcenter6:real;
- pcenter7:real;
- d:int;
 
- left:bool;
- right: bool;
- center: bool;
-
+function findlocation_p(x:real) returns (y:int)
 let
-	pcenter1 = -1.0;
-	pcenter2 = -0.95;
-	pcenter3 = -0.9;
-	pcenter4 = 0.0;
-	pcenter5 = 0.9;
-	pcenter6 = 0.95;
-	pcenter7 = 1.0;
-
-	d = 7;
-	
-	left = (i = 1) and (x < pcenter1);
-	right = (i = d) and (x > pcenter7);
-	center = if (left or right) then false else true;
-
-	y1 = if left then 1.0 else if right then 0.0 else center_calc1(i, x, true);
-
-	y2 = if left then 0.0 else if right then 1.0 else center_calc1(i, x, false);
-
-	--y1 = if i == 1 and x < pcenter1 then 1 else if (i == d and x > pcenter7) then 0 else (pcenter2 - x)/(pcenter2 - pcenter1);
-
+	y = if (x < pc1) then 0
+	else if (x >= pc1 and x <= pc2) then 1
+	else if (x >= pc2 and x <= pc3) then 2
+	else if (x >= pc3 and x <= pc4) then 3
+	else if (x >= pc4 and x <= pc5) then 4
+	else if (x >= pc5 and x <= pc6) then 5
+	else if (x >= pc6 and x <= pc7) then 6
+	else 7;
 tel;
 
-node center_calc1(i:int; x: real; first:bool) returns (y: real)
-var
-	i_incr:int;
-	center:real;
-	center_a:real;
 
-let 
+function findlocation_d(x:real) returns (y:int)
+let
+	y = if (x < dc1) then 0
+	else if (x >= dc1 and x <= dc2) then 1
+	else if (x >= dc2 and x <= dc3) then 2
+	else if (x >= dc3 and x <= dc4) then 3
+	else if (x >= dc4 and x <= dc5) then 4
+	else if (x >= dc5 and x <= dc6) then 5
+	else if (x >= dc6 and x <= dc7) then 6
+	else 7;
+tel;
 
-	center = if (i=1) then -1.0
-	else if (i=2) then -0.95
-	else if (i=3) then -0.9
-	else if (i=4) then 0.0
-	else if (i=5) then 0.9
-	else if (i=6) then 0.96
+-- proportional eq
+
+function y1fuzzify (x:int; input:real) returns (y:real)
+let
+	y = if (x = 0) then 1.0
+	else if (x = 1) then y1calc(pc1, pc2, input)
+	else if (x = 2) then y1calc(pc2, pc3, input)
+	else if (x = 3) then y1calc(pc3, pc4, input)
+	else if (x = 4) then y1calc(pc4, pc5, input)
+	else if (x = 5) then y1calc(pc5, pc6, input)
+	else if (x = 6) then y1calc(pc6, pc7, input)
+	else 0.0;
+tel;
+
+function y1calc (low:real; high:real; x:real) returns (y: real)
+let
+	y = (high - x) / (high - low);
+tel;
+
+function y2fuzzify (x:int; input:real) returns (y:real)
+let
+	y = if (x = 0) then 0.0
+	else if (x = 1) then y2calc(pc1, pc2, input)
+	else if (x = 2) then y2calc(pc2, pc3, input)
+	else if (x = 3) then y2calc(pc3, pc4, input)
+	else if (x = 4) then y2calc(pc4, pc5, input)
+	else if (x = 5) then y2calc(pc5, pc6, input)
+	else if (x = 6) then y2calc(pc6, pc7, input)
 	else 1.0;
-
-	i_incr = i + 1;
-
-	center_a = if (i_incr=1) then -1.0
-	else if (i_incr=2) then -0.95
-	else if (i_incr=3) then -0.9
-	else if (i_incr=4) then 0.0
-	else if (i_incr=5) then 0.9
-	else if (i_incr=6) then 0.96
-	else 1.0;
-
-	y = if first then (center_a - x)/(center_a - center) 
-	else (x - center)/(center_a - center);
-
-
 tel;
 
+function y2calc (low:real; high:real; x:real) returns (y: real)
+
+let
+	y = (x - low) / (high - low);
+tel;
+
+
+ -- differential eq
+
+function dy1fuzzify (x:int; input:real) returns (y:real)
+
+let
+	y = if (x = 0) then 1.0
+	else if (x = 1) then dy1calc(dc1, dc2, input)
+	else if (x = 2) then dy1calc(dc2, dc3, input)
+	else if (x = 3) then dy1calc(dc3, dc4, input)
+	else if (x = 4) then dy1calc(dc4, dc5, input)
+	else if (x = 5) then dy1calc(dc5, dc6, input)
+	else if (x = 6) then dy1calc(dc6, dc7, input)
+	else 0.0;
+tel;
+
+function dy1calc (low:real; high:real; x:real) returns (y: real)
+
+let
+	y = (high - x) / (high - low);
+tel;
+
+function dy2fuzzify (x:int; input:real) returns (y:real)
+
+let
+	y = if (x = 0) then 0.0
+	else if (x = 1) then dy2calc(dc1, dc2, input)
+	else if (x = 2) then dy2calc(dc2, dc3, input)
+	else if (x = 3) then dy2calc(dc3, dc4, input)
+	else if (x = 4) then dy2calc(dc4, dc5, input)
+	else if (x = 5) then dy2calc(dc5, dc6, input)
+	else if (x = 6) then dy2calc(dc6, dc7, input)
+	else 1.0;
+tel;
+
+function dy2calc (low:real; high:real; x:real) returns (y: real)
+let
+	y = (x - low) / (high - low);
+tel;
