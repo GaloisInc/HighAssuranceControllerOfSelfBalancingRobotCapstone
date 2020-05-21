@@ -1,0 +1,107 @@
+(* Artem K *)
+
+node Compute(Input:real; Now:real; Setpoint:real; Kp:real; Ki:real; Kd:real; SampleTime:real;) returns(Output:real;);
+
+let
+ 	Output = 0.0;
+tel;
+
+
+
+
+
+node dkmfuzzy (i: real; x: real) returns (y:real)
+
+var
+ dcenter1:real;
+ dcenter2:real;
+ dcenter3:real;
+ dcenter4:real;
+ dcenter5:real;
+ dcenter6:real;
+ dcenter7:real;
+
+let
+	dcenter1 = -1.0;
+ 	dcenter2 = -0.3;
+ 	dcenter3 = -0.1;
+ 	dcenter4 = 0.0;
+ 	dcenter5 = 0.1;
+ 	dcenter6 = 0.3;
+ 	dcenter7 = 1.0;
+
+	y = 0.0;
+
+tel;
+node pkmfuzzy (i: int; x: real) returns (y1:real; y2: real)
+
+(*LustreToRust, arrays are not supported*)
+var
+ pcenter1:real;
+ pcenter2:real;
+ pcenter3:real;
+ pcenter4:real;
+ pcenter5:real;
+ pcenter6:real;
+ pcenter7:real;
+ d:int;
+
+ left:bool;
+ right: bool;
+ center: bool;
+
+let
+	pcenter1 = -1.0;
+	pcenter2 = -0.95;
+	pcenter3 = -0.9;
+	pcenter4 = 0.0;
+	pcenter5 = 0.9;
+	pcenter6 = 0.95;
+	pcenter7 = 1.0;
+
+	d = 7;
+	
+	left = (i = 1) and (x < pcenter1);
+	right = (i = d) and (x > pcenter7);
+	center = if (left or right) then false else true;
+
+	y1 = if left then 1.0 else if right then 0.0 else center_calc1(i, x, true);
+
+	y2 = if left then 0.0 else if right then 1.0 else center_calc1(i, x, false);
+
+	--y1 = if i == 1 and x < pcenter1 then 1 else if (i == d and x > pcenter7) then 0 else (pcenter2 - x)/(pcenter2 - pcenter1);
+
+tel;
+
+node center_calc1(i:int; x: real; first:bool) returns (y: real)
+var
+	i_incr:int;
+	center:real;
+	center_a:real;
+
+let 
+
+	center = if (i=1) then -1.0
+	else if (i=2) then -0.95
+	else if (i=3) then -0.9
+	else if (i=4) then 0.0
+	else if (i=5) then 0.9
+	else if (i=6) then 0.96
+	else 1.0;
+
+	i_incr = i + 1;
+
+	center_a = if (i_incr=1) then -1.0
+	else if (i_incr=2) then -0.95
+	else if (i_incr=3) then -0.9
+	else if (i_incr=4) then 0.0
+	else if (i_incr=5) then 0.9
+	else if (i_incr=6) then 0.96
+	else 1.0;
+
+	y = if first then (center_a - x)/(center_a - center) 
+	else (x - center)/(center_a - center);
+
+
+tel;
+

@@ -34,9 +34,9 @@ var
 	Kitemp = limit_integral(error, Ki);
         dInput = Input - (0.0 -> pre Input);
         
-        outputSum = limit (0.0 -> pre outputSum + Kitemp * error * SampleTime/1000.0);
+        outputSum = limit (0.0 -> pre outputSum + Ki * error * SampleTime/1000.0);
         
-        Output = limit (Kp * error + Kd * dInput * 1000.0/SampleTime + outputSum);
+        Output = limit (Kp * error - Kd * dInput * 1000.0/SampleTime + outputSum);
         
     tel;
     
@@ -54,7 +54,7 @@ tel;
 function limit_integral (error:real; Ki:real) returns (y:real;);
 
 let
-	y = if (error > .1) then 0.0 else if (error < -.1) then 0.0 else Ki;
+	y = if (error > .05) then 0.0 else if (error < -.05) then 0.0 else Ki;
 tel;
 
 
