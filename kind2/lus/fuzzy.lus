@@ -1,12 +1,12 @@
 (* Artem K *)
 
-node Compute(Input:real; Now:real; Setpoint:real; SampleTime:real;) returns(Output:real;);
+node Compute(Input:real; Now:real; Kp: real; Kd: real; Setpoint:real; SampleTime:real;) returns(Output:real;);
 var
     dInput:real;
     error:real;
 let
-		error = Setpoint - Input;
-		dInput = (Input - (0.0 -> pre Input)) * 1000.0/SampleTime ;
+		error = (Setpoint - Input) * Kp;
+		dInput = ((Input - (0.0 -> pre Input)) * 1000.0/SampleTime) * Kd ;
 
         Output =  if (Now - (0.0 -> pre Now) >= SampleTime) then
 
@@ -15,21 +15,29 @@ let
             0.0 -> pre Output;
 tel;
 
-const pc1 = -1.0;
-const pc2 = -0.95;
-const pc3 = -0.9;
+const pc1 = -.85;
+const pc2 = -.80;
+const pc3 = -.40;
 const pc4 = 0.0;
-const pc5 = 0.9;
-const pc6 = 0.95;
-const pc7 = 1.0;
+const pc5 = -1.0 * pc3;
+const pc6 = -1.0 * pc2;
+const pc7 = -1.0 * pc1;
 
 const dc1 = -1.0;
 const dc2 = -0.3;
 const dc3 = -0.1;
 const dc4 = 0.0;
-const dc5 = 0.1;
-const dc6 = 0.3;
-const dc7 = 1.0;
+const dc5 = -1.0 * dc3;
+const dc6 = -1.0 * dc2;
+const dc7 = -1.0 * dc1;
+
+const NB = -1.0;
+const NM = -0.7;
+const NS = -0.3;
+const ZR = 0.0;
+const PS = 0.3;
+const PM = 0.7;
+const PB = 1.0;
 
 node kmlogic (pinput:real; dinput:real) returns(g:real)
 
@@ -94,24 +102,10 @@ tel;
 
 
 node rule_base (x:int) returns (y:real)
-var
-	NB:real;
-	NM:real;
-	NS:real;
-	ZR:real;
-	PS:real;
-	PM:real;
-	PB:real;
 
 let
 
-	NB = -1.0;
-	NM = -0.7;
-	NS = -0.3;
-	ZR = 0.0;
-	PS = 0.3;
-	PM = 0.7;
-	PB = 1.0;
+
 
 
 	y = if (x=1) then NB

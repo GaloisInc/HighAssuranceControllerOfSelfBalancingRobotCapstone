@@ -28,6 +28,8 @@ fn main() {
 /// |:---:|:---|
 /// | `Input` | Real |
 /// | `Now` | Real |
+/// | `Kp` | Real |
+/// | `Kd` | Real |
 /// | `Setpoint` | Real |
 /// | `SampleTime` | Real |
 ///
@@ -57,6 +59,10 @@ fn main() {
   pub svar_Input: Real,
   /// Input: `Compute.usr.Now`
   pub svar_Now: Real,
+  /// Input: `Compute.usr.Kp`
+  pub svar_Kp: Real,
+  /// Input: `Compute.usr.Kd`
+  pub svar_Kd: Real,
   /// Input: `Compute.usr.Setpoint`
   pub svar_Setpoint: Real,
   /// Input: `Compute.usr.SampleTime`
@@ -80,13 +86,15 @@ impl Sys for Compute {
   type Input = (
     Real, // svar_Input (Compute.usr.Input)
     Real, // svar_Now (Compute.usr.Now)
+    Real, // svar_Kp (Compute.usr.Kp)
+    Real, // svar_Kd (Compute.usr.Kd)
     Real, // svar_Setpoint (Compute.usr.Setpoint)
     Real, // svar_SampleTime (Compute.usr.SampleTime)
   ) ;
   type Output = (
     Real, // svar_Output (Compute.usr.Output)
   ) ;
-/*  fn arity() -> usize { 4 }
+/*  fn arity() -> usize { 6 }
 *//*  fn input_of(vec: Vec<String>) -> Result<Self::Input, String> {
         match vec.len() {
           n if n == Self::arity() => {
@@ -94,7 +102,9 @@ impl Sys for Compute {
               try!( parse::real(& vec[0]) ), 
               try!( parse::real(& vec[1]) ), 
               try!( parse::real(& vec[2]) ), 
-              try!( parse::real(& vec[3]) ),
+              try!( parse::real(& vec[3]) ), 
+              try!( parse::real(& vec[4]) ), 
+              try!( parse::real(& vec[5]) ),
             ) 
           },
           n => Err(
@@ -111,12 +121,14 @@ impl Sys for Compute {
     // |===| Retrieving inputs.
     let svar_Input = input.0 ;
     let svar_Now = input.1 ;
-    let svar_Setpoint = input.2 ;
-    let svar_SampleTime = input.3 ;
+    let svar_Kp = input.2 ;
+    let svar_Kd = input.3 ;
+    let svar_Setpoint = input.4 ;
+    let svar_SampleTime = input.5 ;
     
     // |===| Computing initial state.
-    let svar_error = (svar_Setpoint - svar_Input) ;
-    let svar_dInput = (((svar_Input - 0f64) * 1000f64) / svar_SampleTime) ;
+    let svar_error = ((svar_Setpoint - svar_Input) * svar_Kp) ;
+    let svar_dInput = ((((svar_Input - 0f64) * 1000f64) / svar_SampleTime) * svar_Kd) ;
     let kmlogic_0 = Kmlogic::init( (
       svar_error,
       svar_dInput,
@@ -137,6 +149,8 @@ impl Sys for Compute {
       // |===| Inputs.
       svar_Input: svar_Input,
       svar_Now: svar_Now,
+      svar_Kp: svar_Kp,
+      svar_Kd: svar_Kd,
       svar_Setpoint: svar_Setpoint,
       svar_SampleTime: svar_SampleTime,
       
@@ -157,12 +171,14 @@ impl Sys for Compute {
     // |===| Retrieving inputs.
     let svar_Input = input.0 ;
     let svar_Now = input.1 ;
-    let svar_Setpoint = input.2 ;
-    let svar_SampleTime = input.3 ;
+    let svar_Kp = input.2 ;
+    let svar_Kd = input.3 ;
+    let svar_Setpoint = input.4 ;
+    let svar_SampleTime = input.5 ;
     
     // |===| Computing next state.
-    let svar_error = (svar_Setpoint - svar_Input) ;
-    let svar_dInput = (((svar_Input - self.svar_Input) * 1000f64) / svar_SampleTime) ;
+    let svar_error = ((svar_Setpoint - svar_Input) * svar_Kp) ;
+    let svar_dInput = ((((svar_Input - self.svar_Input) * 1000f64) / svar_SampleTime) * svar_Kd) ;
     /*let kmlogic_0 = */ self.kmlogic_0.next( (
       svar_error,
       svar_dInput,
@@ -182,6 +198,8 @@ impl Sys for Compute {
     // |===| Inputs.
     self.svar_Input = svar_Input ;
     self.svar_Now = svar_Now ;
+    self.svar_Kp = svar_Kp ;
+    self.svar_Kd = svar_Kd ;
     self.svar_Setpoint = svar_Setpoint ;
     self.svar_SampleTime = svar_SampleTime ;
     
@@ -230,16 +248,16 @@ impl Sys for Compute {
 ///
 /// | Lustre identifier | Struct | Inputs | Outputs | Position |
 /// |:---:|:---:|:---:|:---:|:---:|
-/// | `dy2fuzzify` | [Dy2fuzzify](struct.Dy2fuzzify.html) | `dlo`, `dinput` | `abs_13` | [fuzzy.lus line 86](../src/lus/fuzzy.lus.html#86) |
-/// | `dy1fuzzify` | [Dy1fuzzify](struct.Dy1fuzzify.html) | `dlo`, `dinput` | `abs_12` | [fuzzy.lus line 85](../src/lus/fuzzy.lus.html#85) |
-/// | `y2fuzzify` | [Y2fuzzify](struct.Y2fuzzify.html) | `plo`, `pinput` | `abs_11` | [fuzzy.lus line 82](../src/lus/fuzzy.lus.html#82) |
-/// | `y1fuzzify` | [Y1fuzzify](struct.Y1fuzzify.html) | `plo`, `pinput` | `abs_10` | [fuzzy.lus line 81](../src/lus/fuzzy.lus.html#81) |
-/// | `rule_base` | [Rule_base](struct.Rule_base.html) | `abs_8` | `abs_9` | [fuzzy.lus line 78](../src/lus/fuzzy.lus.html#78) |
-/// | `rule_base` | [Rule_base](struct.Rule_base.html) | `abs_6` | `abs_7` | [fuzzy.lus line 77](../src/lus/fuzzy.lus.html#77) |
-/// | `rule_base` | [Rule_base](struct.Rule_base.html) | `abs_4` | `abs_5` | [fuzzy.lus line 74](../src/lus/fuzzy.lus.html#74) |
-/// | `rule_base` | [Rule_base](struct.Rule_base.html) | `abs_2` | `abs_3` | [fuzzy.lus line 73](../src/lus/fuzzy.lus.html#73) |
-/// | `findlocation_d` | [Findlocation_d](struct.Findlocation_d.html) | `dinput` | `abs_1` | [fuzzy.lus line 58](../src/lus/fuzzy.lus.html#58) |
-/// | `findlocation_p` | [Findlocation_p](struct.Findlocation_p.html) | `pinput` | `abs_0` | [fuzzy.lus line 57](../src/lus/fuzzy.lus.html#57) |
+/// | `dy2fuzzify` | [Dy2fuzzify](struct.Dy2fuzzify.html) | `dlo`, `dinput` | `abs_13` | [fuzzy.lus line 94](../src/lus/fuzzy.lus.html#94) |
+/// | `dy1fuzzify` | [Dy1fuzzify](struct.Dy1fuzzify.html) | `dlo`, `dinput` | `abs_12` | [fuzzy.lus line 93](../src/lus/fuzzy.lus.html#93) |
+/// | `y2fuzzify` | [Y2fuzzify](struct.Y2fuzzify.html) | `plo`, `pinput` | `abs_11` | [fuzzy.lus line 90](../src/lus/fuzzy.lus.html#90) |
+/// | `y1fuzzify` | [Y1fuzzify](struct.Y1fuzzify.html) | `plo`, `pinput` | `abs_10` | [fuzzy.lus line 89](../src/lus/fuzzy.lus.html#89) |
+/// | `rule_base` | [Rule_base](struct.Rule_base.html) | `abs_8` | `abs_9` | [fuzzy.lus line 86](../src/lus/fuzzy.lus.html#86) |
+/// | `rule_base` | [Rule_base](struct.Rule_base.html) | `abs_6` | `abs_7` | [fuzzy.lus line 85](../src/lus/fuzzy.lus.html#85) |
+/// | `rule_base` | [Rule_base](struct.Rule_base.html) | `abs_4` | `abs_5` | [fuzzy.lus line 82](../src/lus/fuzzy.lus.html#82) |
+/// | `rule_base` | [Rule_base](struct.Rule_base.html) | `abs_2` | `abs_3` | [fuzzy.lus line 81](../src/lus/fuzzy.lus.html#81) |
+/// | `findlocation_d` | [Findlocation_d](struct.Findlocation_d.html) | `dinput` | `abs_1` | [fuzzy.lus line 66](../src/lus/fuzzy.lus.html#66) |
+/// | `findlocation_p` | [Findlocation_p](struct.Findlocation_p.html) | `pinput` | `abs_0` | [fuzzy.lus line 65](../src/lus/fuzzy.lus.html#65) |
 ///
 /// # Assertions
 ///
@@ -318,25 +336,25 @@ impl Sys for Compute {
   /// Local, local: `kmlogic.impl.usr.plo`
   pub svar_plo: Int,
 
-  /// Call to `findlocation_p` ([fuzzy.lus line 57](../src/lus/fuzzy.lus.html#57)).
+  /// Call to `findlocation_p` ([fuzzy.lus line 65](../src/lus/fuzzy.lus.html#65)).
   pub findlocation_p_9: Findlocation_p,
-  /// Call to `findlocation_d` ([fuzzy.lus line 58](../src/lus/fuzzy.lus.html#58)).
+  /// Call to `findlocation_d` ([fuzzy.lus line 66](../src/lus/fuzzy.lus.html#66)).
   pub findlocation_d_8: Findlocation_d,
-  /// Call to `rule_base` ([fuzzy.lus line 73](../src/lus/fuzzy.lus.html#73)).
+  /// Call to `rule_base` ([fuzzy.lus line 81](../src/lus/fuzzy.lus.html#81)).
   pub rule_base_7: Rule_base,
-  /// Call to `rule_base` ([fuzzy.lus line 74](../src/lus/fuzzy.lus.html#74)).
+  /// Call to `rule_base` ([fuzzy.lus line 82](../src/lus/fuzzy.lus.html#82)).
   pub rule_base_6: Rule_base,
-  /// Call to `rule_base` ([fuzzy.lus line 77](../src/lus/fuzzy.lus.html#77)).
+  /// Call to `rule_base` ([fuzzy.lus line 85](../src/lus/fuzzy.lus.html#85)).
   pub rule_base_5: Rule_base,
-  /// Call to `rule_base` ([fuzzy.lus line 78](../src/lus/fuzzy.lus.html#78)).
+  /// Call to `rule_base` ([fuzzy.lus line 86](../src/lus/fuzzy.lus.html#86)).
   pub rule_base_4: Rule_base,
-  /// Call to `y1fuzzify` ([fuzzy.lus line 81](../src/lus/fuzzy.lus.html#81)).
+  /// Call to `y1fuzzify` ([fuzzy.lus line 89](../src/lus/fuzzy.lus.html#89)).
   pub y1fuzzify_3: Y1fuzzify,
-  /// Call to `y2fuzzify` ([fuzzy.lus line 82](../src/lus/fuzzy.lus.html#82)).
+  /// Call to `y2fuzzify` ([fuzzy.lus line 90](../src/lus/fuzzy.lus.html#90)).
   pub y2fuzzify_2: Y2fuzzify,
-  /// Call to `dy1fuzzify` ([fuzzy.lus line 85](../src/lus/fuzzy.lus.html#85)).
+  /// Call to `dy1fuzzify` ([fuzzy.lus line 93](../src/lus/fuzzy.lus.html#93)).
   pub dy1fuzzify_1: Dy1fuzzify,
-  /// Call to `dy2fuzzify` ([fuzzy.lus line 86](../src/lus/fuzzy.lus.html#86)).
+  /// Call to `dy2fuzzify` ([fuzzy.lus line 94](../src/lus/fuzzy.lus.html#94)).
   pub dy2fuzzify_0: Dy2fuzzify,
 }
 
@@ -709,12 +727,12 @@ impl Sys for Kmlogic {
 ///
 /// | Lustre identifier | Struct | Inputs | Outputs | Position |
 /// |:---:|:---:|:---:|:---:|:---:|
-/// | `dy2calc` | [Dy2calc](struct.Dy2calc.html) | `abs_9`, `abs_11`, `input` | `abs_12` | [fuzzy.lus line 268](../src/lus/fuzzy.lus.html#268) |
-/// | `dy2calc` | [Dy2calc](struct.Dy2calc.html) | `abs_7`, `abs_9`, `input` | `abs_10` | [fuzzy.lus line 267](../src/lus/fuzzy.lus.html#267) |
-/// | `dy2calc` | [Dy2calc](struct.Dy2calc.html) | `abs_5`, `abs_7`, `input` | `abs_8` | [fuzzy.lus line 266](../src/lus/fuzzy.lus.html#266) |
-/// | `dy2calc` | [Dy2calc](struct.Dy2calc.html) | `abs_3`, `abs_5`, `input` | `abs_6` | [fuzzy.lus line 265](../src/lus/fuzzy.lus.html#265) |
-/// | `dy2calc` | [Dy2calc](struct.Dy2calc.html) | `abs_1`, `abs_3`, `input` | `abs_4` | [fuzzy.lus line 264](../src/lus/fuzzy.lus.html#264) |
-/// | `dy2calc` | [Dy2calc](struct.Dy2calc.html) | `abs_0`, `abs_1`, `input` | `abs_2` | [fuzzy.lus line 263](../src/lus/fuzzy.lus.html#263) |
+/// | `dy2calc` | [Dy2calc](struct.Dy2calc.html) | `abs_9`, `abs_11`, `input` | `abs_12` | [fuzzy.lus line 262](../src/lus/fuzzy.lus.html#262) |
+/// | `dy2calc` | [Dy2calc](struct.Dy2calc.html) | `abs_7`, `abs_9`, `input` | `abs_10` | [fuzzy.lus line 261](../src/lus/fuzzy.lus.html#261) |
+/// | `dy2calc` | [Dy2calc](struct.Dy2calc.html) | `abs_5`, `abs_7`, `input` | `abs_8` | [fuzzy.lus line 260](../src/lus/fuzzy.lus.html#260) |
+/// | `dy2calc` | [Dy2calc](struct.Dy2calc.html) | `abs_3`, `abs_5`, `input` | `abs_6` | [fuzzy.lus line 259](../src/lus/fuzzy.lus.html#259) |
+/// | `dy2calc` | [Dy2calc](struct.Dy2calc.html) | `abs_1`, `abs_3`, `input` | `abs_4` | [fuzzy.lus line 258](../src/lus/fuzzy.lus.html#258) |
+/// | `dy2calc` | [Dy2calc](struct.Dy2calc.html) | `abs_0`, `abs_1`, `input` | `abs_2` | [fuzzy.lus line 257](../src/lus/fuzzy.lus.html#257) |
 ///
 /// # Assertions
 ///
@@ -761,17 +779,17 @@ impl Sys for Kmlogic {
   /// Local, invisible local: `dy2fuzzify.res.abs_0`
   pub svar_abs_0: Real,
 
-  /// Call to `dy2calc` ([fuzzy.lus line 263](../src/lus/fuzzy.lus.html#263)).
+  /// Call to `dy2calc` ([fuzzy.lus line 257](../src/lus/fuzzy.lus.html#257)).
   pub dy2calc_5: Dy2calc,
-  /// Call to `dy2calc` ([fuzzy.lus line 264](../src/lus/fuzzy.lus.html#264)).
+  /// Call to `dy2calc` ([fuzzy.lus line 258](../src/lus/fuzzy.lus.html#258)).
   pub dy2calc_4: Dy2calc,
-  /// Call to `dy2calc` ([fuzzy.lus line 265](../src/lus/fuzzy.lus.html#265)).
+  /// Call to `dy2calc` ([fuzzy.lus line 259](../src/lus/fuzzy.lus.html#259)).
   pub dy2calc_3: Dy2calc,
-  /// Call to `dy2calc` ([fuzzy.lus line 266](../src/lus/fuzzy.lus.html#266)).
+  /// Call to `dy2calc` ([fuzzy.lus line 260](../src/lus/fuzzy.lus.html#260)).
   pub dy2calc_2: Dy2calc,
-  /// Call to `dy2calc` ([fuzzy.lus line 267](../src/lus/fuzzy.lus.html#267)).
+  /// Call to `dy2calc` ([fuzzy.lus line 261](../src/lus/fuzzy.lus.html#261)).
   pub dy2calc_1: Dy2calc,
-  /// Call to `dy2calc` ([fuzzy.lus line 268](../src/lus/fuzzy.lus.html#268)).
+  /// Call to `dy2calc` ([fuzzy.lus line 262](../src/lus/fuzzy.lus.html#262)).
   pub dy2calc_0: Dy2calc,
 }
 
@@ -808,9 +826,9 @@ impl Sys for Dy2fuzzify {
     let svar_input = input.1 ;
     
     // |===| Computing initial state.
-    let svar_abs_11 = 1f64 ;
-    let svar_abs_7 = 1f64 / 10f64 ;
-    let svar_abs_9 = 3f64 / 10f64 ;
+    let svar_abs_9 = - (1f64 * - 3f64 / 10f64) ;
+    let svar_abs_11 = - (1f64 * - 1f64) ;
+    let svar_abs_7 = - (1f64 * - 1f64 / 10f64) ;
     let svar_abs_3 = - 1f64 / 10f64 ;
     let svar_abs_1 = - 3f64 / 10f64 ;
     let svar_abs_0 = - 1f64 ;
@@ -916,9 +934,9 @@ impl Sys for Dy2fuzzify {
     let svar_input = input.1 ;
     
     // |===| Computing next state.
-    let svar_abs_11 = 1f64 ;
-    let svar_abs_7 = 1f64 / 10f64 ;
-    let svar_abs_9 = 3f64 / 10f64 ;
+    let svar_abs_9 = - (1f64 * - 3f64 / 10f64) ;
+    let svar_abs_11 = - (1f64 * - 1f64) ;
+    let svar_abs_7 = - (1f64 * - 1f64 / 10f64) ;
     let svar_abs_3 = - 1f64 / 10f64 ;
     let svar_abs_1 = - 3f64 / 10f64 ;
     let svar_abs_0 = - 1f64 ;
@@ -1044,12 +1062,12 @@ impl Sys for Dy2fuzzify {
 ///
 /// | Lustre identifier | Struct | Inputs | Outputs | Position |
 /// |:---:|:---:|:---:|:---:|:---:|
-/// | `dy1calc` | [Dy1calc](struct.Dy1calc.html) | `abs_9`, `abs_11`, `input` | `abs_12` | [fuzzy.lus line 249](../src/lus/fuzzy.lus.html#249) |
-/// | `dy1calc` | [Dy1calc](struct.Dy1calc.html) | `abs_7`, `abs_9`, `input` | `abs_10` | [fuzzy.lus line 248](../src/lus/fuzzy.lus.html#248) |
-/// | `dy1calc` | [Dy1calc](struct.Dy1calc.html) | `abs_5`, `abs_7`, `input` | `abs_8` | [fuzzy.lus line 247](../src/lus/fuzzy.lus.html#247) |
-/// | `dy1calc` | [Dy1calc](struct.Dy1calc.html) | `abs_3`, `abs_5`, `input` | `abs_6` | [fuzzy.lus line 246](../src/lus/fuzzy.lus.html#246) |
-/// | `dy1calc` | [Dy1calc](struct.Dy1calc.html) | `abs_1`, `abs_3`, `input` | `abs_4` | [fuzzy.lus line 245](../src/lus/fuzzy.lus.html#245) |
-/// | `dy1calc` | [Dy1calc](struct.Dy1calc.html) | `abs_0`, `abs_1`, `input` | `abs_2` | [fuzzy.lus line 244](../src/lus/fuzzy.lus.html#244) |
+/// | `dy1calc` | [Dy1calc](struct.Dy1calc.html) | `abs_9`, `abs_11`, `input` | `abs_12` | [fuzzy.lus line 243](../src/lus/fuzzy.lus.html#243) |
+/// | `dy1calc` | [Dy1calc](struct.Dy1calc.html) | `abs_7`, `abs_9`, `input` | `abs_10` | [fuzzy.lus line 242](../src/lus/fuzzy.lus.html#242) |
+/// | `dy1calc` | [Dy1calc](struct.Dy1calc.html) | `abs_5`, `abs_7`, `input` | `abs_8` | [fuzzy.lus line 241](../src/lus/fuzzy.lus.html#241) |
+/// | `dy1calc` | [Dy1calc](struct.Dy1calc.html) | `abs_3`, `abs_5`, `input` | `abs_6` | [fuzzy.lus line 240](../src/lus/fuzzy.lus.html#240) |
+/// | `dy1calc` | [Dy1calc](struct.Dy1calc.html) | `abs_1`, `abs_3`, `input` | `abs_4` | [fuzzy.lus line 239](../src/lus/fuzzy.lus.html#239) |
+/// | `dy1calc` | [Dy1calc](struct.Dy1calc.html) | `abs_0`, `abs_1`, `input` | `abs_2` | [fuzzy.lus line 238](../src/lus/fuzzy.lus.html#238) |
 ///
 /// # Assertions
 ///
@@ -1096,17 +1114,17 @@ impl Sys for Dy2fuzzify {
   /// Local, invisible local: `dy1fuzzify.res.abs_0`
   pub svar_abs_0: Real,
 
-  /// Call to `dy1calc` ([fuzzy.lus line 244](../src/lus/fuzzy.lus.html#244)).
+  /// Call to `dy1calc` ([fuzzy.lus line 238](../src/lus/fuzzy.lus.html#238)).
   pub dy1calc_5: Dy1calc,
-  /// Call to `dy1calc` ([fuzzy.lus line 245](../src/lus/fuzzy.lus.html#245)).
+  /// Call to `dy1calc` ([fuzzy.lus line 239](../src/lus/fuzzy.lus.html#239)).
   pub dy1calc_4: Dy1calc,
-  /// Call to `dy1calc` ([fuzzy.lus line 246](../src/lus/fuzzy.lus.html#246)).
+  /// Call to `dy1calc` ([fuzzy.lus line 240](../src/lus/fuzzy.lus.html#240)).
   pub dy1calc_3: Dy1calc,
-  /// Call to `dy1calc` ([fuzzy.lus line 247](../src/lus/fuzzy.lus.html#247)).
+  /// Call to `dy1calc` ([fuzzy.lus line 241](../src/lus/fuzzy.lus.html#241)).
   pub dy1calc_2: Dy1calc,
-  /// Call to `dy1calc` ([fuzzy.lus line 248](../src/lus/fuzzy.lus.html#248)).
+  /// Call to `dy1calc` ([fuzzy.lus line 242](../src/lus/fuzzy.lus.html#242)).
   pub dy1calc_1: Dy1calc,
-  /// Call to `dy1calc` ([fuzzy.lus line 249](../src/lus/fuzzy.lus.html#249)).
+  /// Call to `dy1calc` ([fuzzy.lus line 243](../src/lus/fuzzy.lus.html#243)).
   pub dy1calc_0: Dy1calc,
 }
 
@@ -1143,9 +1161,9 @@ impl Sys for Dy1fuzzify {
     let svar_input = input.1 ;
     
     // |===| Computing initial state.
-    let svar_abs_11 = 1f64 ;
-    let svar_abs_7 = 1f64 / 10f64 ;
-    let svar_abs_9 = 3f64 / 10f64 ;
+    let svar_abs_9 = - (1f64 * - 3f64 / 10f64) ;
+    let svar_abs_11 = - (1f64 * - 1f64) ;
+    let svar_abs_7 = - (1f64 * - 1f64 / 10f64) ;
     let svar_abs_3 = - 1f64 / 10f64 ;
     let svar_abs_1 = - 3f64 / 10f64 ;
     let svar_abs_0 = - 1f64 ;
@@ -1251,9 +1269,9 @@ impl Sys for Dy1fuzzify {
     let svar_input = input.1 ;
     
     // |===| Computing next state.
-    let svar_abs_11 = 1f64 ;
-    let svar_abs_7 = 1f64 / 10f64 ;
-    let svar_abs_9 = 3f64 / 10f64 ;
+    let svar_abs_9 = - (1f64 * - 3f64 / 10f64) ;
+    let svar_abs_11 = - (1f64 * - 1f64) ;
+    let svar_abs_7 = - (1f64 * - 1f64 / 10f64) ;
     let svar_abs_3 = - 1f64 / 10f64 ;
     let svar_abs_1 = - 3f64 / 10f64 ;
     let svar_abs_0 = - 1f64 ;
@@ -1379,12 +1397,12 @@ impl Sys for Dy1fuzzify {
 ///
 /// | Lustre identifier | Struct | Inputs | Outputs | Position |
 /// |:---:|:---:|:---:|:---:|:---:|
-/// | `y2calc` | [Y2calc](struct.Y2calc.html) | `abs_9`, `abs_11`, `input` | `abs_12` | [fuzzy.lus line 227](../src/lus/fuzzy.lus.html#227) |
-/// | `y2calc` | [Y2calc](struct.Y2calc.html) | `abs_7`, `abs_9`, `input` | `abs_10` | [fuzzy.lus line 226](../src/lus/fuzzy.lus.html#226) |
-/// | `y2calc` | [Y2calc](struct.Y2calc.html) | `abs_5`, `abs_7`, `input` | `abs_8` | [fuzzy.lus line 225](../src/lus/fuzzy.lus.html#225) |
-/// | `y2calc` | [Y2calc](struct.Y2calc.html) | `abs_3`, `abs_5`, `input` | `abs_6` | [fuzzy.lus line 224](../src/lus/fuzzy.lus.html#224) |
-/// | `y2calc` | [Y2calc](struct.Y2calc.html) | `abs_1`, `abs_3`, `input` | `abs_4` | [fuzzy.lus line 223](../src/lus/fuzzy.lus.html#223) |
-/// | `y2calc` | [Y2calc](struct.Y2calc.html) | `abs_0`, `abs_1`, `input` | `abs_2` | [fuzzy.lus line 222](../src/lus/fuzzy.lus.html#222) |
+/// | `y2calc` | [Y2calc](struct.Y2calc.html) | `abs_9`, `abs_11`, `input` | `abs_12` | [fuzzy.lus line 221](../src/lus/fuzzy.lus.html#221) |
+/// | `y2calc` | [Y2calc](struct.Y2calc.html) | `abs_7`, `abs_9`, `input` | `abs_10` | [fuzzy.lus line 220](../src/lus/fuzzy.lus.html#220) |
+/// | `y2calc` | [Y2calc](struct.Y2calc.html) | `abs_5`, `abs_7`, `input` | `abs_8` | [fuzzy.lus line 219](../src/lus/fuzzy.lus.html#219) |
+/// | `y2calc` | [Y2calc](struct.Y2calc.html) | `abs_3`, `abs_5`, `input` | `abs_6` | [fuzzy.lus line 218](../src/lus/fuzzy.lus.html#218) |
+/// | `y2calc` | [Y2calc](struct.Y2calc.html) | `abs_1`, `abs_3`, `input` | `abs_4` | [fuzzy.lus line 217](../src/lus/fuzzy.lus.html#217) |
+/// | `y2calc` | [Y2calc](struct.Y2calc.html) | `abs_0`, `abs_1`, `input` | `abs_2` | [fuzzy.lus line 216](../src/lus/fuzzy.lus.html#216) |
 ///
 /// # Assertions
 ///
@@ -1431,17 +1449,17 @@ impl Sys for Dy1fuzzify {
   /// Local, invisible local: `y2fuzzify.res.abs_0`
   pub svar_abs_0: Real,
 
-  /// Call to `y2calc` ([fuzzy.lus line 222](../src/lus/fuzzy.lus.html#222)).
+  /// Call to `y2calc` ([fuzzy.lus line 216](../src/lus/fuzzy.lus.html#216)).
   pub y2calc_5: Y2calc,
-  /// Call to `y2calc` ([fuzzy.lus line 223](../src/lus/fuzzy.lus.html#223)).
+  /// Call to `y2calc` ([fuzzy.lus line 217](../src/lus/fuzzy.lus.html#217)).
   pub y2calc_4: Y2calc,
-  /// Call to `y2calc` ([fuzzy.lus line 224](../src/lus/fuzzy.lus.html#224)).
+  /// Call to `y2calc` ([fuzzy.lus line 218](../src/lus/fuzzy.lus.html#218)).
   pub y2calc_3: Y2calc,
-  /// Call to `y2calc` ([fuzzy.lus line 225](../src/lus/fuzzy.lus.html#225)).
+  /// Call to `y2calc` ([fuzzy.lus line 219](../src/lus/fuzzy.lus.html#219)).
   pub y2calc_2: Y2calc,
-  /// Call to `y2calc` ([fuzzy.lus line 226](../src/lus/fuzzy.lus.html#226)).
+  /// Call to `y2calc` ([fuzzy.lus line 220](../src/lus/fuzzy.lus.html#220)).
   pub y2calc_1: Y2calc,
-  /// Call to `y2calc` ([fuzzy.lus line 227](../src/lus/fuzzy.lus.html#227)).
+  /// Call to `y2calc` ([fuzzy.lus line 221](../src/lus/fuzzy.lus.html#221)).
   pub y2calc_0: Y2calc,
 }
 
@@ -1478,12 +1496,12 @@ impl Sys for Y2fuzzify {
     let svar_input = input.1 ;
     
     // |===| Computing initial state.
-    let svar_abs_11 = 1f64 ;
-    let svar_abs_1 = - 19f64 / 20f64 ;
-    let svar_abs_7 = 9f64 / 10f64 ;
-    let svar_abs_9 = 19f64 / 20f64 ;
-    let svar_abs_3 = - 9f64 / 10f64 ;
-    let svar_abs_0 = - 1f64 ;
+    let svar_abs_0 = - 17f64 / 20f64 ;
+    let svar_abs_7 = - (1f64 * - 2f64 / 5f64) ;
+    let svar_abs_3 = - 2f64 / 5f64 ;
+    let svar_abs_1 = - 4f64 / 5f64 ;
+    let svar_abs_11 = - (1f64 * - 17f64 / 20f64) ;
+    let svar_abs_9 = - (1f64 * - 4f64 / 5f64) ;
     let svar_abs_5 = 0f64 ;
     let y2calc_5 = Y2calc::init( (
       svar_abs_0,
@@ -1586,12 +1604,12 @@ impl Sys for Y2fuzzify {
     let svar_input = input.1 ;
     
     // |===| Computing next state.
-    let svar_abs_11 = 1f64 ;
-    let svar_abs_1 = - 19f64 / 20f64 ;
-    let svar_abs_7 = 9f64 / 10f64 ;
-    let svar_abs_9 = 19f64 / 20f64 ;
-    let svar_abs_3 = - 9f64 / 10f64 ;
-    let svar_abs_0 = - 1f64 ;
+    let svar_abs_0 = - 17f64 / 20f64 ;
+    let svar_abs_7 = - (1f64 * - 2f64 / 5f64) ;
+    let svar_abs_3 = - 2f64 / 5f64 ;
+    let svar_abs_1 = - 4f64 / 5f64 ;
+    let svar_abs_11 = - (1f64 * - 17f64 / 20f64) ;
+    let svar_abs_9 = - (1f64 * - 4f64 / 5f64) ;
     let svar_abs_5 = 0f64 ;
     /*let y2calc_5 = */ self.y2calc_5.next( (
       svar_abs_0,
@@ -1714,12 +1732,12 @@ impl Sys for Y2fuzzify {
 ///
 /// | Lustre identifier | Struct | Inputs | Outputs | Position |
 /// |:---:|:---:|:---:|:---:|:---:|
-/// | `y1calc` | [Y1calc](struct.Y1calc.html) | `abs_9`, `abs_11`, `input` | `abs_12` | [fuzzy.lus line 210](../src/lus/fuzzy.lus.html#210) |
-/// | `y1calc` | [Y1calc](struct.Y1calc.html) | `abs_7`, `abs_9`, `input` | `abs_10` | [fuzzy.lus line 209](../src/lus/fuzzy.lus.html#209) |
-/// | `y1calc` | [Y1calc](struct.Y1calc.html) | `abs_5`, `abs_7`, `input` | `abs_8` | [fuzzy.lus line 208](../src/lus/fuzzy.lus.html#208) |
-/// | `y1calc` | [Y1calc](struct.Y1calc.html) | `abs_3`, `abs_5`, `input` | `abs_6` | [fuzzy.lus line 207](../src/lus/fuzzy.lus.html#207) |
-/// | `y1calc` | [Y1calc](struct.Y1calc.html) | `abs_1`, `abs_3`, `input` | `abs_4` | [fuzzy.lus line 206](../src/lus/fuzzy.lus.html#206) |
-/// | `y1calc` | [Y1calc](struct.Y1calc.html) | `abs_0`, `abs_1`, `input` | `abs_2` | [fuzzy.lus line 205](../src/lus/fuzzy.lus.html#205) |
+/// | `y1calc` | [Y1calc](struct.Y1calc.html) | `abs_9`, `abs_11`, `input` | `abs_12` | [fuzzy.lus line 204](../src/lus/fuzzy.lus.html#204) |
+/// | `y1calc` | [Y1calc](struct.Y1calc.html) | `abs_7`, `abs_9`, `input` | `abs_10` | [fuzzy.lus line 203](../src/lus/fuzzy.lus.html#203) |
+/// | `y1calc` | [Y1calc](struct.Y1calc.html) | `abs_5`, `abs_7`, `input` | `abs_8` | [fuzzy.lus line 202](../src/lus/fuzzy.lus.html#202) |
+/// | `y1calc` | [Y1calc](struct.Y1calc.html) | `abs_3`, `abs_5`, `input` | `abs_6` | [fuzzy.lus line 201](../src/lus/fuzzy.lus.html#201) |
+/// | `y1calc` | [Y1calc](struct.Y1calc.html) | `abs_1`, `abs_3`, `input` | `abs_4` | [fuzzy.lus line 200](../src/lus/fuzzy.lus.html#200) |
+/// | `y1calc` | [Y1calc](struct.Y1calc.html) | `abs_0`, `abs_1`, `input` | `abs_2` | [fuzzy.lus line 199](../src/lus/fuzzy.lus.html#199) |
 ///
 /// # Assertions
 ///
@@ -1766,17 +1784,17 @@ impl Sys for Y2fuzzify {
   /// Local, invisible local: `y1fuzzify.res.abs_0`
   pub svar_abs_0: Real,
 
-  /// Call to `y1calc` ([fuzzy.lus line 205](../src/lus/fuzzy.lus.html#205)).
+  /// Call to `y1calc` ([fuzzy.lus line 199](../src/lus/fuzzy.lus.html#199)).
   pub y1calc_5: Y1calc,
-  /// Call to `y1calc` ([fuzzy.lus line 206](../src/lus/fuzzy.lus.html#206)).
+  /// Call to `y1calc` ([fuzzy.lus line 200](../src/lus/fuzzy.lus.html#200)).
   pub y1calc_4: Y1calc,
-  /// Call to `y1calc` ([fuzzy.lus line 207](../src/lus/fuzzy.lus.html#207)).
+  /// Call to `y1calc` ([fuzzy.lus line 201](../src/lus/fuzzy.lus.html#201)).
   pub y1calc_3: Y1calc,
-  /// Call to `y1calc` ([fuzzy.lus line 208](../src/lus/fuzzy.lus.html#208)).
+  /// Call to `y1calc` ([fuzzy.lus line 202](../src/lus/fuzzy.lus.html#202)).
   pub y1calc_2: Y1calc,
-  /// Call to `y1calc` ([fuzzy.lus line 209](../src/lus/fuzzy.lus.html#209)).
+  /// Call to `y1calc` ([fuzzy.lus line 203](../src/lus/fuzzy.lus.html#203)).
   pub y1calc_1: Y1calc,
-  /// Call to `y1calc` ([fuzzy.lus line 210](../src/lus/fuzzy.lus.html#210)).
+  /// Call to `y1calc` ([fuzzy.lus line 204](../src/lus/fuzzy.lus.html#204)).
   pub y1calc_0: Y1calc,
 }
 
@@ -1813,12 +1831,12 @@ impl Sys for Y1fuzzify {
     let svar_input = input.1 ;
     
     // |===| Computing initial state.
-    let svar_abs_11 = 1f64 ;
-    let svar_abs_1 = - 19f64 / 20f64 ;
-    let svar_abs_7 = 9f64 / 10f64 ;
-    let svar_abs_9 = 19f64 / 20f64 ;
-    let svar_abs_3 = - 9f64 / 10f64 ;
-    let svar_abs_0 = - 1f64 ;
+    let svar_abs_0 = - 17f64 / 20f64 ;
+    let svar_abs_7 = - (1f64 * - 2f64 / 5f64) ;
+    let svar_abs_3 = - 2f64 / 5f64 ;
+    let svar_abs_1 = - 4f64 / 5f64 ;
+    let svar_abs_11 = - (1f64 * - 17f64 / 20f64) ;
+    let svar_abs_9 = - (1f64 * - 4f64 / 5f64) ;
     let svar_abs_5 = 0f64 ;
     let y1calc_5 = Y1calc::init( (
       svar_abs_0,
@@ -1921,12 +1939,12 @@ impl Sys for Y1fuzzify {
     let svar_input = input.1 ;
     
     // |===| Computing next state.
-    let svar_abs_11 = 1f64 ;
-    let svar_abs_1 = - 19f64 / 20f64 ;
-    let svar_abs_7 = 9f64 / 10f64 ;
-    let svar_abs_9 = 19f64 / 20f64 ;
-    let svar_abs_3 = - 9f64 / 10f64 ;
-    let svar_abs_0 = - 1f64 ;
+    let svar_abs_0 = - 17f64 / 20f64 ;
+    let svar_abs_7 = - (1f64 * - 2f64 / 5f64) ;
+    let svar_abs_3 = - 2f64 / 5f64 ;
+    let svar_abs_1 = - 4f64 / 5f64 ;
+    let svar_abs_11 = - (1f64 * - 17f64 / 20f64) ;
+    let svar_abs_9 = - (1f64 * - 4f64 / 5f64) ;
     let svar_abs_5 = 0f64 ;
     /*let y1calc_5 = */ self.y1calc_5.next( (
       svar_abs_0,
@@ -2064,20 +2082,6 @@ impl Sys for Y1fuzzify {
   /// Output: `rule_base.usr.y`
   pub svar_y: Real,
 
-  /// Local, local: `rule_base.impl.usr.PB`
-  pub svar_PB: Real,
-  /// Local, local: `rule_base.impl.usr.PM`
-  pub svar_PM: Real,
-  /// Local, local: `rule_base.impl.usr.PS`
-  pub svar_PS: Real,
-  /// Local, local: `rule_base.impl.usr.ZR`
-  pub svar_ZR: Real,
-  /// Local, local: `rule_base.impl.usr.NS`
-  pub svar_NS: Real,
-  /// Local, local: `rule_base.impl.usr.NM`
-  pub svar_NM: Real,
-  /// Local, local: `rule_base.impl.usr.NB`
-  pub svar_NB: Real,
 
 }
 
@@ -2111,14 +2115,7 @@ impl Sys for Rule_base {
     let svar_x = input.0 ;
     
     // |===| Computing initial state.
-    let svar_NB = - 1f64 ;
-    let svar_NM = - 7f64 / 10f64 ;
-    let svar_NS = - 3f64 / 10f64 ;
-    let svar_ZR = 0f64 ;
-    let svar_PS = 3f64 / 10f64 ;
-    let svar_PM = 7f64 / 10f64 ;
-    let svar_PB = 1f64 ;
-    let svar_y = ( if (svar_x == 1) { svar_NB } else {( if (svar_x == 2) { svar_NB } else {( if (svar_x == 3) { svar_NB } else {( if (svar_x == 4) { svar_NB } else {( if (svar_x == 5) { svar_NM } else {( if (svar_x == 6) { svar_NS } else {( if (svar_x == 7) { svar_ZR } else {( if (svar_x == 8) { svar_NB } else {( if (svar_x == 9) { svar_NB } else {( if (svar_x == 10) { svar_NB } else {( if (svar_x == 11) { svar_NM } else {( if (svar_x == 12) { svar_NS } else {( if (svar_x == 13) { svar_ZR } else {( if (svar_x == 14) { svar_PS } else {( if (svar_x == 15) { svar_NB } else {( if (svar_x == 16) { svar_NB } else {( if (svar_x == 17) { svar_NM } else {( if (svar_x == 18) { svar_NS } else {( if (svar_x == 19) { svar_ZR } else {( if (svar_x == 20) { svar_PS } else {( if (svar_x == 21) { svar_PM } else {( if (svar_x == 22) { svar_NB } else {( if (svar_x == 23) { svar_NM } else {( if (svar_x == 24) { svar_NS } else {( if (svar_x == 25) { svar_ZR } else {( if (svar_x == 26) { svar_PS } else {( if (svar_x == 27) { svar_PM } else {( if (svar_x == 28) { svar_PB } else {( if (svar_x == 29) { svar_NM } else {( if (svar_x == 30) { svar_NS } else {( if (svar_x == 31) { svar_ZR } else {( if (svar_x == 32) { svar_PS } else {( if (svar_x == 33) { svar_PM } else {( if (svar_x == 34) { svar_PB } else {( if (svar_x == 35) { svar_PB } else {( if (svar_x == 36) { svar_NS } else {( if (svar_x == 37) { svar_ZR } else {( if (svar_x == 38) { svar_PS } else {( if (svar_x == 39) { svar_PM } else {( if (svar_x == 40) { svar_PB } else {( if (svar_x == 41) { svar_PB } else {( if (svar_x == 42) { svar_PB } else {( if (svar_x == 43) { svar_ZR } else {( if (svar_x == 44) { svar_PS } else {( if (svar_x == 45) { svar_PM } else {svar_PB } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) ;
+    let svar_y = ( if (svar_x == 1) { - 1f64 } else {( if (svar_x == 2) { - 1f64 } else {( if (svar_x == 3) { - 1f64 } else {( if (svar_x == 4) { - 1f64 } else {( if (svar_x == 5) { - 7f64 / 10f64 } else {( if (svar_x == 6) { - 3f64 / 10f64 } else {( if (svar_x == 7) { 0f64 } else {( if (svar_x == 8) { - 1f64 } else {( if (svar_x == 9) { - 1f64 } else {( if (svar_x == 10) { - 1f64 } else {( if (svar_x == 11) { - 7f64 / 10f64 } else {( if (svar_x == 12) { - 3f64 / 10f64 } else {( if (svar_x == 13) { 0f64 } else {( if (svar_x == 14) { 3f64 / 10f64 } else {( if (svar_x == 15) { - 1f64 } else {( if (svar_x == 16) { - 1f64 } else {( if (svar_x == 17) { - 7f64 / 10f64 } else {( if (svar_x == 18) { - 3f64 / 10f64 } else {( if (svar_x == 19) { 0f64 } else {( if (svar_x == 20) { 3f64 / 10f64 } else {( if (svar_x == 21) { 7f64 / 10f64 } else {( if (svar_x == 22) { - 1f64 } else {( if (svar_x == 23) { - 7f64 / 10f64 } else {( if (svar_x == 24) { - 3f64 / 10f64 } else {( if (svar_x == 25) { 0f64 } else {( if (svar_x == 26) { 3f64 / 10f64 } else {( if (svar_x == 27) { 7f64 / 10f64 } else {( if (svar_x == 28) { 1f64 } else {( if (svar_x == 29) { - 7f64 / 10f64 } else {( if (svar_x == 30) { - 3f64 / 10f64 } else {( if (svar_x == 31) { 0f64 } else {( if (svar_x == 32) { 3f64 / 10f64 } else {( if (svar_x == 33) { 7f64 / 10f64 } else {( if (svar_x == 34) { 1f64 } else {( if (svar_x == 35) { 1f64 } else {( if (svar_x == 36) { - 3f64 / 10f64 } else {( if (svar_x == 37) { 0f64 } else {( if (svar_x == 38) { 3f64 / 10f64 } else {( if (svar_x == 39) { 7f64 / 10f64 } else {( if (svar_x == 40) { 1f64 } else {( if (svar_x == 41) { 1f64 } else {( if (svar_x == 42) { 1f64 } else {( if (svar_x == 43) { 0f64 } else {( if (svar_x == 44) { 3f64 / 10f64 } else {( if (svar_x == 45) { 7f64 / 10f64 } else {1f64 } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) ;
     
     // |===| Checking assertions.
     
@@ -2134,13 +2131,7 @@ impl Sys for Rule_base {
       svar_y: svar_y,
       
       // |===| Locals.
-      svar_PB: svar_PB,
-      svar_PM: svar_PM,
-      svar_PS: svar_PS,
-      svar_ZR: svar_ZR,
-      svar_NS: svar_NS,
-      svar_NM: svar_NM,
-      svar_NB: svar_NB,
+      
       
       // |===| Calls.
       
@@ -2152,14 +2143,7 @@ impl Sys for Rule_base {
     let svar_x = input.0 ;
     
     // |===| Computing next state.
-    let svar_NB = - 1f64 ;
-    let svar_NM = - 7f64 / 10f64 ;
-    let svar_NS = - 3f64 / 10f64 ;
-    let svar_ZR = 0f64 ;
-    let svar_PS = 3f64 / 10f64 ;
-    let svar_PM = 7f64 / 10f64 ;
-    let svar_PB = 1f64 ;
-    let svar_y = ( if (svar_x == 1) { svar_NB } else {( if (svar_x == 2) { svar_NB } else {( if (svar_x == 3) { svar_NB } else {( if (svar_x == 4) { svar_NB } else {( if (svar_x == 5) { svar_NM } else {( if (svar_x == 6) { svar_NS } else {( if (svar_x == 7) { svar_ZR } else {( if (svar_x == 8) { svar_NB } else {( if (svar_x == 9) { svar_NB } else {( if (svar_x == 10) { svar_NB } else {( if (svar_x == 11) { svar_NM } else {( if (svar_x == 12) { svar_NS } else {( if (svar_x == 13) { svar_ZR } else {( if (svar_x == 14) { svar_PS } else {( if (svar_x == 15) { svar_NB } else {( if (svar_x == 16) { svar_NB } else {( if (svar_x == 17) { svar_NM } else {( if (svar_x == 18) { svar_NS } else {( if (svar_x == 19) { svar_ZR } else {( if (svar_x == 20) { svar_PS } else {( if (svar_x == 21) { svar_PM } else {( if (svar_x == 22) { svar_NB } else {( if (svar_x == 23) { svar_NM } else {( if (svar_x == 24) { svar_NS } else {( if (svar_x == 25) { svar_ZR } else {( if (svar_x == 26) { svar_PS } else {( if (svar_x == 27) { svar_PM } else {( if (svar_x == 28) { svar_PB } else {( if (svar_x == 29) { svar_NM } else {( if (svar_x == 30) { svar_NS } else {( if (svar_x == 31) { svar_ZR } else {( if (svar_x == 32) { svar_PS } else {( if (svar_x == 33) { svar_PM } else {( if (svar_x == 34) { svar_PB } else {( if (svar_x == 35) { svar_PB } else {( if (svar_x == 36) { svar_NS } else {( if (svar_x == 37) { svar_ZR } else {( if (svar_x == 38) { svar_PS } else {( if (svar_x == 39) { svar_PM } else {( if (svar_x == 40) { svar_PB } else {( if (svar_x == 41) { svar_PB } else {( if (svar_x == 42) { svar_PB } else {( if (svar_x == 43) { svar_ZR } else {( if (svar_x == 44) { svar_PS } else {( if (svar_x == 45) { svar_PM } else {svar_PB } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) ;
+    let svar_y = ( if (svar_x == 1) { - 1f64 } else {( if (svar_x == 2) { - 1f64 } else {( if (svar_x == 3) { - 1f64 } else {( if (svar_x == 4) { - 1f64 } else {( if (svar_x == 5) { - 7f64 / 10f64 } else {( if (svar_x == 6) { - 3f64 / 10f64 } else {( if (svar_x == 7) { 0f64 } else {( if (svar_x == 8) { - 1f64 } else {( if (svar_x == 9) { - 1f64 } else {( if (svar_x == 10) { - 1f64 } else {( if (svar_x == 11) { - 7f64 / 10f64 } else {( if (svar_x == 12) { - 3f64 / 10f64 } else {( if (svar_x == 13) { 0f64 } else {( if (svar_x == 14) { 3f64 / 10f64 } else {( if (svar_x == 15) { - 1f64 } else {( if (svar_x == 16) { - 1f64 } else {( if (svar_x == 17) { - 7f64 / 10f64 } else {( if (svar_x == 18) { - 3f64 / 10f64 } else {( if (svar_x == 19) { 0f64 } else {( if (svar_x == 20) { 3f64 / 10f64 } else {( if (svar_x == 21) { 7f64 / 10f64 } else {( if (svar_x == 22) { - 1f64 } else {( if (svar_x == 23) { - 7f64 / 10f64 } else {( if (svar_x == 24) { - 3f64 / 10f64 } else {( if (svar_x == 25) { 0f64 } else {( if (svar_x == 26) { 3f64 / 10f64 } else {( if (svar_x == 27) { 7f64 / 10f64 } else {( if (svar_x == 28) { 1f64 } else {( if (svar_x == 29) { - 7f64 / 10f64 } else {( if (svar_x == 30) { - 3f64 / 10f64 } else {( if (svar_x == 31) { 0f64 } else {( if (svar_x == 32) { 3f64 / 10f64 } else {( if (svar_x == 33) { 7f64 / 10f64 } else {( if (svar_x == 34) { 1f64 } else {( if (svar_x == 35) { 1f64 } else {( if (svar_x == 36) { - 3f64 / 10f64 } else {( if (svar_x == 37) { 0f64 } else {( if (svar_x == 38) { 3f64 / 10f64 } else {( if (svar_x == 39) { 7f64 / 10f64 } else {( if (svar_x == 40) { 1f64 } else {( if (svar_x == 41) { 1f64 } else {( if (svar_x == 42) { 1f64 } else {( if (svar_x == 43) { 0f64 } else {( if (svar_x == 44) { 3f64 / 10f64 } else {( if (svar_x == 45) { 7f64 / 10f64 } else {1f64 } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) } ) ;
     
     // |===| Checking assertions.
     
@@ -2175,13 +2159,7 @@ impl Sys for Rule_base {
     self.svar_y = svar_y ;
     
     // |===| Locals.
-    self.svar_PB = svar_PB ;
-    self.svar_PM = svar_PM ;
-    self.svar_PS = svar_PS ;
-    self.svar_ZR = svar_ZR ;
-    self.svar_NS = svar_NS ;
-    self.svar_NM = svar_NM ;
-    self.svar_NB = svar_NB ;
+    
     
     // |===| Calls.
     /**/ 
@@ -2268,7 +2246,7 @@ impl Sys for Findlocation_d {
     let svar_x = input.0 ;
     
     // |===| Computing initial state.
-    let svar_y = ( if (svar_x < - 1f64) { 0 } else {( if ((svar_x >= - 1f64) & (svar_x <= - 3f64 / 10f64)) { 1 } else {( if ((svar_x >= - 3f64 / 10f64) & (svar_x <= - 1f64 / 10f64)) { 2 } else {( if ((svar_x >= - 1f64 / 10f64) & (svar_x <= 0f64)) { 3 } else {( if ((svar_x >= 0f64) & (svar_x <= 1f64 / 10f64)) { 4 } else {( if ((svar_x >= 1f64 / 10f64) & (svar_x <= 3f64 / 10f64)) { 5 } else {( if ((svar_x >= 3f64 / 10f64) & (svar_x <= 1f64)) { 6 } else {7 } ) } ) } ) } ) } ) } ) } ) ;
+    let svar_y = ( if (svar_x < - 1f64) { 0 } else {( if ((svar_x >= - 1f64) & (svar_x <= - 3f64 / 10f64)) { 1 } else {( if ((svar_x >= - 3f64 / 10f64) & (svar_x <= - 1f64 / 10f64)) { 2 } else {( if ((svar_x >= - 1f64 / 10f64) & (svar_x <= 0f64)) { 3 } else {( if ((svar_x >= 0f64) & (svar_x <= - (1f64 * - 1f64 / 10f64))) { 4 } else {( if ((svar_x >= - (1f64 * - 1f64 / 10f64)) & (svar_x <= - (1f64 * - 3f64 / 10f64))) { 5 } else {( if ((svar_x >= - (1f64 * - 3f64 / 10f64)) & (svar_x <= - (1f64 * - 1f64))) { 6 } else {7 } ) } ) } ) } ) } ) } ) } ) ;
     
     // |===| Checking assertions.
     
@@ -2296,7 +2274,7 @@ impl Sys for Findlocation_d {
     let svar_x = input.0 ;
     
     // |===| Computing next state.
-    let svar_y = ( if (svar_x < - 1f64) { 0 } else {( if ((svar_x >= - 1f64) & (svar_x <= - 3f64 / 10f64)) { 1 } else {( if ((svar_x >= - 3f64 / 10f64) & (svar_x <= - 1f64 / 10f64)) { 2 } else {( if ((svar_x >= - 1f64 / 10f64) & (svar_x <= 0f64)) { 3 } else {( if ((svar_x >= 0f64) & (svar_x <= 1f64 / 10f64)) { 4 } else {( if ((svar_x >= 1f64 / 10f64) & (svar_x <= 3f64 / 10f64)) { 5 } else {( if ((svar_x >= 3f64 / 10f64) & (svar_x <= 1f64)) { 6 } else {7 } ) } ) } ) } ) } ) } ) } ) ;
+    let svar_y = ( if (svar_x < - 1f64) { 0 } else {( if ((svar_x >= - 1f64) & (svar_x <= - 3f64 / 10f64)) { 1 } else {( if ((svar_x >= - 3f64 / 10f64) & (svar_x <= - 1f64 / 10f64)) { 2 } else {( if ((svar_x >= - 1f64 / 10f64) & (svar_x <= 0f64)) { 3 } else {( if ((svar_x >= 0f64) & (svar_x <= - (1f64 * - 1f64 / 10f64))) { 4 } else {( if ((svar_x >= - (1f64 * - 1f64 / 10f64)) & (svar_x <= - (1f64 * - 3f64 / 10f64))) { 5 } else {( if ((svar_x >= - (1f64 * - 3f64 / 10f64)) & (svar_x <= - (1f64 * - 1f64))) { 6 } else {7 } ) } ) } ) } ) } ) } ) } ) ;
     
     // |===| Checking assertions.
     
@@ -2399,7 +2377,7 @@ impl Sys for Findlocation_p {
     let svar_x = input.0 ;
     
     // |===| Computing initial state.
-    let svar_y = ( if (svar_x < - 1f64) { 0 } else {( if ((svar_x >= - 1f64) & (svar_x <= - 19f64 / 20f64)) { 1 } else {( if ((svar_x >= - 19f64 / 20f64) & (svar_x <= - 9f64 / 10f64)) { 2 } else {( if ((svar_x >= - 9f64 / 10f64) & (svar_x <= 0f64)) { 3 } else {( if ((svar_x >= 0f64) & (svar_x <= 9f64 / 10f64)) { 4 } else {( if ((svar_x >= 9f64 / 10f64) & (svar_x <= 19f64 / 20f64)) { 5 } else {( if ((svar_x >= 19f64 / 20f64) & (svar_x <= 1f64)) { 6 } else {7 } ) } ) } ) } ) } ) } ) } ) ;
+    let svar_y = ( if (svar_x < - 17f64 / 20f64) { 0 } else {( if ((svar_x >= - 17f64 / 20f64) & (svar_x <= - 4f64 / 5f64)) { 1 } else {( if ((svar_x >= - 4f64 / 5f64) & (svar_x <= - 2f64 / 5f64)) { 2 } else {( if ((svar_x >= - 2f64 / 5f64) & (svar_x <= 0f64)) { 3 } else {( if ((svar_x >= 0f64) & (svar_x <= - (1f64 * - 2f64 / 5f64))) { 4 } else {( if ((svar_x >= - (1f64 * - 2f64 / 5f64)) & (svar_x <= - (1f64 * - 4f64 / 5f64))) { 5 } else {( if ((svar_x >= - (1f64 * - 4f64 / 5f64)) & (svar_x <= - (1f64 * - 17f64 / 20f64))) { 6 } else {7 } ) } ) } ) } ) } ) } ) } ) ;
     
     // |===| Checking assertions.
     
@@ -2427,7 +2405,7 @@ impl Sys for Findlocation_p {
     let svar_x = input.0 ;
     
     // |===| Computing next state.
-    let svar_y = ( if (svar_x < - 1f64) { 0 } else {( if ((svar_x >= - 1f64) & (svar_x <= - 19f64 / 20f64)) { 1 } else {( if ((svar_x >= - 19f64 / 20f64) & (svar_x <= - 9f64 / 10f64)) { 2 } else {( if ((svar_x >= - 9f64 / 10f64) & (svar_x <= 0f64)) { 3 } else {( if ((svar_x >= 0f64) & (svar_x <= 9f64 / 10f64)) { 4 } else {( if ((svar_x >= 9f64 / 10f64) & (svar_x <= 19f64 / 20f64)) { 5 } else {( if ((svar_x >= 19f64 / 20f64) & (svar_x <= 1f64)) { 6 } else {7 } ) } ) } ) } ) } ) } ) } ) ;
+    let svar_y = ( if (svar_x < - 17f64 / 20f64) { 0 } else {( if ((svar_x >= - 17f64 / 20f64) & (svar_x <= - 4f64 / 5f64)) { 1 } else {( if ((svar_x >= - 4f64 / 5f64) & (svar_x <= - 2f64 / 5f64)) { 2 } else {( if ((svar_x >= - 2f64 / 5f64) & (svar_x <= 0f64)) { 3 } else {( if ((svar_x >= 0f64) & (svar_x <= - (1f64 * - 2f64 / 5f64))) { 4 } else {( if ((svar_x >= - (1f64 * - 2f64 / 5f64)) & (svar_x <= - (1f64 * - 4f64 / 5f64))) { 5 } else {( if ((svar_x >= - (1f64 * - 4f64 / 5f64)) & (svar_x <= - (1f64 * - 17f64 / 20f64))) { 6 } else {7 } ) } ) } ) } ) } ) } ) } ) ;
     
     // |===| Checking assertions.
     
@@ -3125,6 +3103,8 @@ Options:
   --compute
     inputs:  Real (Input)
              Real (Now)
+             Real (Kp)
+             Real (Kd)
              Real (Setpoint)
              Real (SampleTime)
     outputs: Real (Output)
