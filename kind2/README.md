@@ -39,8 +39,24 @@
 
 I've found the easiest way to test this build and use this embedded version of kind2 is to run `ocamlbuild -j 0 -pkg yojson -cflags -w,@P@U@F kind2.native` in the `Artem1199/kind2/src` file after running `./autogen.sh` as per the kind2 readme.  This will generate `kind2.native` in `_build`.  A copy of this build can be found in the above folder `lus/kind2.native`.  Run `kind2.native pid2.lus --compile=true` to generate a folder with Rust code.
 
-For reference I've generated a file diff between the original `lustreToRust.ml` and the 'embedded' version in this folder.  All of the modifications I made where done by commenting out sections of the string that is used in Ocaml to generate the Rust code.  None of the Ocaml code has been modified, and very little of the core state machine is modified.
+### Kind2 LustreToRust Generated Modifications
+For reference I've generated a file `lustreToRust_diff.txt` between the original `lustreToRust.ml` and the 'embedded' version in this folder.  All of the modifications I made where done by commenting out sections of the string that is used in Ocaml to generate the Rust code.  None of the Ocaml code has been modified, and very little of the core state machine is modified.  The original lustreToRust generator creates a cmd window program that accepts inputs into the cmd window, and spits out results.  It also confirms if your assertions are true or not.
 
-The most significant change is the use of the mutable references for structs.  Previously the generated Rust code would take ownership of the structs, but now C++/Arduino is responsible for passing a pointer to the memory, so the Rust code no longer creates any objects like before.  Additionally the use of `Error` has been removed.
+**Here is a list of the general modifications I made:**
+1. Commented out `clap_and_run() function`, there's no point to run this as a seperate program in embedded.
+2. Commented out references to `std`
+3. Commented out all there cmd window interfaces, i.e. `InputReader`
+4. Commented out all `Result` types, Removed `OK()` returns, and Removed `Err`
+5. Entirely replaced `read_init` (old read_init is still generated, but another function is used)
+6. Entirely replaced `read_next` (ditto above)
+    1. Critical change here, I modified the input to a mutable reference, this was I could keep things FFI compliant with C++.  I believe the original functionality had it return a new object to replace the old one instead of modifying the same object each time.
+    2. This means that I do not return the next state anymore, instead I override the values in the current structure.  **This is an area where I can see potential functional errors.**  (See lines 241 - 244) So far though the controllers I have generated are working properly.
+7. Commented out `run()`
+8. Commented out `pub mod parse () function`, used for command window, not needed for functionality.
+9. Commented `arity()`, again cmd window.
 
-`pid2.lus` is a working pid controller that I have already tested on the MKR1010.
+**Chanes I did not make:**
+1. I did not deal with assertions, this is potential because of my ignorance of Kind2, but I did not see how this could be useful in embedded Rust.  That means if your lustre code has assertions, the generated Rust code **will not** work properly.
+
+### So you've generated a controller...
+Usually I copy and past the code into a folder setup for generating Rust controller libraries i.e. [Artem1199/otis-arduino](https://github.com/Artem1199/otis-arduino/tree/master/otis_twipv2/Rust-Cortex-M-PID/pidControl/src).  I create a shim function to call `read_init` to initialize the controller.  Then create a 2nd shim function `read_next` to run the calculations.  That otis-arduino repo has a full explanation of the shim functions.  `lib.rs` holds the shim functions while each controller is seperated in it's own file.
