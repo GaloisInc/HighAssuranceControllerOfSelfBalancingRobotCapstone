@@ -55,7 +55,7 @@ For reference I've generated a file `lustreToRust_diff.txt` between the original
 8. Commented out `pub mod parse () function`, used for command window, not needed for functionality.
 9. Commented `arity()`, again cmd window.
 
-**Chanes I did not make:**
+**Changes I did not make:**
 1. I did not deal with assertions, this is potential because of my ignorance of Kind2, but I did not see how this could be useful in embedded Rust.  That means if your lustre code has assertions, the generated Rust code **will not** work properly.
 
 ### So you've generated a controller...
