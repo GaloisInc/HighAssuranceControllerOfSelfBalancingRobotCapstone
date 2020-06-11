@@ -1,18 +1,27 @@
 (* Artem K *)
 
-node Compute(Input:real; Now:real; Kp: real; Kd: real; Setpoint:real; SampleTime:real;) returns(Output:real;);
+node FUZ(Input:real; Now:real; Kp:real; Ki:real; Kd:real; Setpoint:real; SampleTime:real;) returns(Output:real;);
 var
     dInput:real;
     error:real;
+    outputSum:real;	
 let
-		error = (Setpoint - Input) * Kp;
-		dInput = ((Input - (0.0 -> pre Input)) * 1000.0/SampleTime) * Kd ;
+
+	outputSum = limit (0.0 -> pre outputSum + Ki * error * SampleTime/1000.0);
+	error = (Setpoint - Input) * Kp;
+	dInput = ((Input - (0.0 -> pre Input)) * 1000.0/SampleTime) * Kd ;
 
         Output =  if (Now - (0.0 -> pre Now) >= SampleTime) then
-
-            kmlogic(error, dInput)
+            kmlogic(error, dInput) + outputSum
         else
             0.0 -> pre Output;
+tel;
+
+function limit (x:real) returns (y:real);
+let
+
+   y = if (x > 1.0) then 1.0 else if (x < -1.0) then -1.0 else x;
+
 tel;
 
 const pc1 = -.85;
@@ -59,8 +68,6 @@ var
 	dindex2:int;
 
 let
-
-
 	-- Return location 0 to 7, before NB is 0, after PB is 7
 	plo = findlocation_p(pinput);
 	dlo = findlocation_d(dinput);
@@ -104,9 +111,6 @@ tel;
 node rule_base (x:int) returns (y:real)
 
 let
-
-
-
 
 	y = if (x=1) then NB
 	else if (x=2) then NB
