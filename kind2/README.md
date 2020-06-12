@@ -35,9 +35,11 @@
 
 ## Kind2 Embedded Code generator
 
-`/Artem1199/Kind2` is branch of kind2 with a modified version of `lustreToRust.ml` that is responsible for the Rust code generation from lustre.  Nothing else in the branch has been modified, so `lustreToRust.ml` can be placed into any copy of Kind2 and compile Kind2 with a code generator.  Kind2 requires multiple dependencies, follow the kind2 [readme](https://github.com/kind2-mc/kind2).
+This folder has modified version the `lustreToRust.ml` called `lustreToRust.ml-embedded`, this file can simply be placed into the source files of Kind2. The file will need to be renamed back to `lustreToRust.ml` and the original version will have to be overwritten.  Kind2 requires multiple dependencies, follow the Kind2 [readme](https://github.com/kind2-mc/kind2).
 
-I've found the easiest way to test this build and use this embedded version of kind2 is to run `ocamlbuild -j 0 -pkg yojson -cflags -w,@P@U@F kind2.native` in the `Artem1199/kind2/src` file after running `./autogen.sh` as per the kind2 readme.  This will generate `kind2.native` in `_build`.  A copy of this build can be found in the above folder `lus/kind2.native`.  Run `kind2.native pid2.lus --compile=true` to generate a folder with Rust code.
+I've found the easiest way to test this build and use this embedded version of kind2 is to run `ocamlbuild -j 0 -pkg yojson -cflags -w,@P@U@F kind2.native` in the `/kind2/src` file after running `./autogen.sh` as per the kind2 readme.  This will generate `kind2.native` in `_build`.
+
+A copy of this build can be found in the above folder `lus/kind2.native`.  Run `kind2.native pid2.lus --compile=true` to generate a folder with Rust code.
 
 ### Kind2 LustreToRust Generated Modifications
 For reference I've generated a file `lustreToRust_diff.txt` between the original `lustreToRust.ml` and the 'embedded' version in this folder.  All of the modifications I made where done by commenting out sections of the string that is used in Ocaml to generate the Rust code.  None of the Ocaml code has been modified, and very little of the core state machine is modified.  The original lustreToRust generator creates a cmd window program that accepts inputs into the cmd window, and spits out results.  It also confirms if your assertions are true or not.
